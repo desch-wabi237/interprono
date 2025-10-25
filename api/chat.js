@@ -1,53 +1,48 @@
-// api/chat.js - Version corrigée
-const fetch = require('node-fetch');
+// api/chat.js - Version OpenAI adaptée
+import OpenAI from "openai";
 
-module.exports = async (req, res) => {
-    // 1. Définition des constantes sécurisées
-    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-    const MODEL = 'gemini-2.0-flash-exp'; // Modèle plus stable
-    const PROMO_CODE = "TAR72";
-    const AFFILIATE_LINK = "https://refpa58144.com/L?tag=d_4708581m_1573c_&site=4708581&ad=1573";
-    const WHATSAPP_LINK = "https://whatsapp.com/channel/0029VbBRgnhEawdxneZ5To1i";
-    const TELEGRAM_LINK = "https://t.me/+tuopCS5aGEk3ZWZk";
+export default async function handler(req, res) {
+  // 1. Clé API OpenAI
+  const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+  const MODEL = "gpt-4o-mini"; // rapide et peu coûteux
+  const PROMO_CODE = "TAR72";
+  const AFFILIATE_LINK = "https://refpa58144.com/L?tag=d_4708581m_1573c_&site=4708581&ad=1573";
+  const WHATSAPP_LINK = "https://whatsapp.com/channel/0029VbBRgnhEawdxneZ5To1i";
+  const TELEGRAM_LINK = "https://t.me/+tuopCS5aGEk3ZWZk";
 
-    // 2. Gestion CORS
-    res.setHeader('Access-Control-Allow-Credentials', true);
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    
-    // Gérer les requêtes OPTIONS pour CORS
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
+  // 2. CORS
+  res.setHeader("Access-Control-Allow-Credentials", true);
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS,PATCH,DELETE,POST,PUT");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  if (req.method === "OPTIONS") return res.status(200).end();
+
+  // 3. Vérification méthode
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method Not Allowed" });
+  }
+
+  // 4. Vérif clé API
+  if (!OPENAI_API_KEY) {
+    console.error("❌ Clé API OpenAI manquante");
+    return res.status(500).json({ error: "Clé API manquante dans les variables d'environnement" });
+  }
+
+  // 5. Extraction du message utilisateur
+  let userQuery;
+  try {
+    const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+    userQuery = body.userQuery;
+    if (!userQuery || typeof userQuery !== "string") {
+      return res.status(400).json({ error: "Requête utilisateur invalide" });
     }
+  } catch (error) {
+    console.error("❌ Erreur de parsing:", error);
+    return res.status(400).json({ error: "Format de requête invalide" });
+  }
 
-    // 3. Vérification de la méthode
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method Not Allowed' });
-    }
-
-    // 4. Vérification de la clé API
-    if (!GEMINI_API_KEY) {
-        console.error("❌ Clé API Gemini manquante dans les variables d'environnement");
-        return res.status(500).json({ error: "Configuration serveur manquante" });
-    }
-
-    // 5. Extraction de la requête utilisateur
-    let userQuery;
-    try {
-        const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-        userQuery = body.userQuery;
-        
-        if (!userQuery || typeof userQuery !== 'string') {
-            return res.status(400).json({ error: 'Requête utilisateur invalide' });
-        }
-    } catch (error) {
-        console.error("❌ Erreur de parsing du corps:", error);
-        return res.status(400).json({ error: 'Format de requête invalide' });
-    }
-
-    // 6. Prompt système
-const SYSTEM_PROMPT = `
+  // 6. Prompt système
+  const SYSTEM_PROMPT = `
 Vous êtes un assistant amical nommé TAR72PRONOSTIC qui aide les utilisateurs à profiter du code promo TAR72 pour obtenir des bonus sur 1xBet et Melbet. 
 Votre rôle est d’encourager les inscriptions avec ce code et d’expliquer les avantages.
 
@@ -60,6 +55,7 @@ Votre rôle est d’encourager les inscriptions avec ce code et d’expliquer le
    - Faire un premier dépôt de 5000F ou 10$ pour activer tous les avantages.
 4. Partagez toujours ces liens :
    - 📱 Chaîne WhatsApp (pronostics gratuits quotidiens): ${WHATSAPP_LINK}
+   - 📱 Canal Telegram: ${TELEGRAM_LINK}
    - 🎰 Inscription 1xBet: https://1xbet.com
    - 🎯 Inscription Melbet: https://melbet.com
 
@@ -69,69 +65,35 @@ Votre rôle est d’encourager les inscriptions avec ce code et d’expliquer le
 - Concis (3 phrases max !).
 - Naturel comme une conversation entre amis.
 
-## Exemples:
-En français :
-"Inscris-toi avec le code **TAR72** pour débloquer des bonus incroyables et accéder à nos coupons de grosses cotes et scores exacts ! Fais ton premier dépôt de 5000F ou 10$ pour profiter de tous les avantages. Rejoins aussi notre chaîne WhatsApp pour des pronos gratuits chaque jour : ${WHATSAPP_LINK} 🔥"
-
-⚠️ Toujours mentionner clairement que le code **TAR72** est OBLIGATOIRE pour télécharger les coupons premium !
+## Exemple:
+"Inscris-toi avec le code **TAR72** pour débloquer des bonus incroyables et accéder à nos coupons de grosses cotes ! Fais ton premier dépôt de 5000F ou 10$ pour profiter de tous les avantages. Rejoins notre chaîne WhatsApp pour des pronos gratuits chaque jour : ${WHATSAPP_LINK} 🔥"
 `;
 
+  // 7. Appel OpenAI
+  const client = new OpenAI({ apiKey: OPENAI_API_KEY });
 
-    // 7. Construction du payload Gemini
-    const payload = {
-        contents: [{
-            parts: [{
-                text: SYSTEM_PROMPT + `\n\nQuestion de l'utilisateur: ${userQuery}`
-            }]
-        }],
-        generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 1024,
-        }
-    };
+  try {
+    console.log("🔄 Appel à l'API OpenAI...");
+    const completion = await client.chat.completions.create({
+      model: MODEL,
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: userQuery },
+      ],
+      temperature: 0.7,
+      max_tokens: 256,
+    });
 
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+    const text = completion.choices?.[0]?.message?.content || "Aucune réponse générée.";
+    console.log("✅ Réponse OpenAI reçue");
 
-    try {
-        console.log("🔄 Appel à l'API Gemini...");
-        
-        const geminiResponse = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload)
-        });
-
-        const responseData = await geminiResponse.json();
-
-        if (!geminiResponse.ok) {
-            console.error("❌ Erreur Gemini API:", responseData);
-            return res.status(geminiResponse.status).json({ 
-                error: responseData.error?.message || 'Erreur API Gemini' 
-            });
-        }
-
-        const text = responseData.candidates?.[0]?.content?.parts?.[0]?.text;
-
-        if (!text) {
-            console.error("❌ Réponse vide de Gemini:", responseData);
-            return res.status(500).json({ error: "Réponse IA vide" });
-        }
-
-        console.log("✅ Réponse Gemini reçue avec succès");
-        
-        // 8. Renvoyer la réponse
-        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-        return res.status(200).send(text);
-
-    } catch (error) {
-        console.error("💥 Erreur serveur:", error);
-        return res.status(500).json({ 
-            error: "Erreur interne du serveur",
-            details: error.message 
-        });
-    }
-};
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    return res.status(200).send(text);
+  } catch (error) {
+    console.error("💥 Erreur API OpenAI:", error);
+    return res.status(500).json({
+      error: "Erreur interne du serveur",
+      details: error.message,
+    });
+  }
+}
