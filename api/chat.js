@@ -6,8 +6,8 @@ module.exports = async (req, res) => {
     const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
     const MODEL = 'gemini-1.5-flash';
     const PROMO_CODE = "JAX72";
-    const WHATSAPP_LINK = "https://whatsapp.com/channel/0029VbBRgnhEawdxneZ5To1i";
-    const TELEGRAM_LINK = "https://t.me/+tuopCS5aGEk3ZWZk";
+    const WHATSAPP_LINK = "https://whatsapp.com/channel/0029Vb6DfduAe5VxRWAu0413";
+    const TELEGRAM_LINK = "https://whatsapp.com/channel/0029Vb6DfduAe5VxRWAu0413";
 
     // Headers CORS
     res.setHeader('Access-Control-Allow-Credentials', true);
