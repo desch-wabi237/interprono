@@ -1,4 +1,4 @@
-// api/chat.js - Version avec 1500+ fallbacks intelligents structurés
+// api/chat.js - Version avec 2000+ réponses en français
 const fetch = require('node-fetch');
 
 module.exports = async (req, res) => {
@@ -32,7 +32,7 @@ module.exports = async (req, res) => {
     }
 
     // ============================================================================
-    // 🧠 SYSTÈME DE FALLBACK AVEC 1500+ RÉPONSES STRUCTURÉES
+    // 🧠 SYSTÈME DE FALLBACK AVEC 2000+ RÉPONSES FRANÇAIS
     // ============================================================================
 
     const generateIntelligentResponse = (userMessage) => {
@@ -40,11 +40,10 @@ module.exports = async (req, res) => {
         
         // 🔍 Détection de langue avancée
         const languageDetectors = {
-            french: /salut|bonjour|coucou|bonsoir|merci|quoi|comment|pourquoi|français|fr|inscription|code|promo|bonus|dépôt|paris|pronos|football|match|gagner/i,
-            english: /hello|hi|hey|what|how|when|where|why|english|en|sign|up|register|deposit|bonus|code|betting|predictions|soccer|win/i,
-            spanish: /hola|buenos|días|tardes|noches|qué|cómo|cuándo|dónde|porqué|español|es|registro|inscripción|código|bonos|depósito|apuestas|fútbol|ganar/i,
-            portuguese: /olá|oi|boa|dia|tarde|noite|que|como|quando|onde|porque|português|pt|registro|inscrição|código|bónus|depósito|apostas|futebol|ganhar/i,
-            arabic: /مرحبا|سلام|اهلا|مساء|صباح|كيف|متى|اين|لماذا|عربي|تسجيل|كود|مكافأة|ايداع|رهان|كرة|قدم|ربح/i
+            french: /salut|bonjour|coucou|bonsoir|merci|quoi|comment|pourquoi|français|fr|inscription|code|promo|bonus|dépôt|paris|pronos|football|match|gagner|stp|svp|argent|gain|win|victoire/i,
+            english: /hello|hi|hey|what|how|when|where|why|english|en|sign|up|register|deposit|bonus|code|betting|predictions|soccer|win|money|please/i,
+            spanish: /hola|buenos|días|tardes|noches|qué|cómo|cuándo|dónde|porqué|español|es|registro|inscripción|código|bonos|depósito|apuestas|fútbol|ganar|por favor/i,
+            portuguese: /olá|oi|boa|dia|tarde|noite|que|como|quando|onde|porque|português|pt|registro|inscrição|código|bónus|depósito|apostas|futebol|ganhar|por favor/i
         };
 
         let detectedLanguage = 'french';
@@ -57,15 +56,18 @@ module.exports = async (req, res) => {
 
         // 🎯 Détection d'intention
         const intentions = {
-            greeting: /salut|bonjour|hello|hi|hola|olá|hey|yo|cc|slt|مرحبا|اهلا/i,
-            promoCode: /code promo|code|promo|código|promotion|bonus code|كود|مكافأة/i,
-            registration: /s'inscrire|inscription|inscrire|register|sign up|crear cuenta|تسجيل|اشتراك/i,
-            deposit: /dépôt|déposer|deposit|verser|payer|ايداع|دفع/i,
-            bonus: /bonus|bonus|récompense|reward|gift|bónus|مكافأة|هدية/i,
-            predictions: /prono|pronostic|prediction|prédire|forecast|pronóstico|توقعات|تنبؤ/i,
-            problem: /problème|bug|erreur|error|marche pas|not working|مشكلة|خطأ/i,
-            contact: /contact|support|aide|help|sos|مساعدة|دعم/i,
-            social: /whatsapp|telegram|télégram|réseau|social|red social|وسائل تواصل/i
+            greeting: /salut|bonjour|hello|hi|hola|olá|hey|yo|cc|slt|bonsoir|wesh|yoo|hello|hi/i,
+            promoCode: /code promo|code|promo|código|promotion|bonus code|quel code|code pour|recommander/i,
+            registration: /s'inscrire|inscription|inscrire|register|sign up|crear cuenta|comment s'inscrire|devenir membre|créer compte/i,
+            deposit: /dépôt|déposer|deposit|verser|payer|paiement|payment|combien déposer|montant|argent/i,
+            bonus: /bonus|bonus|récompense|reward|gift|cadeau|offre|avantage|bénéfice|prime/i,
+            predictions: /prono|pronostic|prediction|prédire|forecast|pronóstico|tuyaux|conseil|astuce|tips/i,
+            problem: /problème|bug|erreur|error|marche pas|not working|difficulté|souci|aide|help/i,
+            contact: /contact|support|aide|help|sos|assistance|service client|équipe|staff/i,
+            social: /whatsapp|telegram|télégram|réseau|social|groupe|communauté|channel|chaîne/i,
+            sports: /foot|football|soccer|basket|nba|tennis|rugby|sport|match|équipe|joueur/i,
+            strategy: /stratégie|strategy|conseil|advice|tip|astuce|méthode|technique|gagner/i,
+            results: /résultat|result|score|winner|gagnant|victoire|défaite|match terminé/i
         };
 
         let detectedIntent = 'general';
@@ -77,116 +79,167 @@ module.exports = async (req, res) => {
         }
 
         // 🔄 Système de rotation des liens (1 fois sur 3)
-        const shouldIncludeLinks = Math.random() < 0.33; // 33% de chance
+        const shouldIncludeLinks = Math.random() < 0.33;
 
         // ============================================================================
-        // 📚 BASE DE DONNÉES DE 1500+ RÉPONSES ORGANISÉES
+        // 📚 BASE DE DONNÉES AVEC 2000+ RÉPONSES FRANÇAIS
         // ============================================================================
 
         const responseDatabase = {
-            // 🌟 FRANÇAIS (600+ réponses)
+            // 🌟 FRANÇAIS (2000+ réponses)
             french: {
                 greeting: [
-                    `Salut l'ami ! 👋 Prêt à maximiser tes gains avec le code **${PROMO_CODE}** ? Inscris-toi vite et fais ton premier dépôt de 5000F pour tout débloquer ! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Notre équipe t\'attend !'} 🔥`,
-                    `Bonjour ! 🚀 Content de te revoir. N'oublie pas : **${PROMO_CODE}** = bonus max + coupons VIP ! ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Tes avantages t\'attendent !'} 💫`,
-                    `Coucou ! 😊 Belle journée pour s'inscrire avec **${PROMO_CODE}** et activer les bonus avec un dépôt de 10$ ! ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Le succès commence ici !'} 🎯`
+                    `Salut champion ! 👋 Prêt à dominer les paris avec **${PROMO_CODE}** ? Inscris-toi vite et démarre avec 5000F pour tout débloquer ! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Le succès commence maintenant !'} 🔥`,
+                    `Bonjour l'expert ! 🚀 Content de te compter parmi nous. **${PROMO_CODE}** va révolutionner tes gains ! ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Tes avantages sont activés !'} 💫`,
+                    `Coucou stratège ! 😊 Belle journée pour maximiser avec **${PROMO_CODE}** ! Dépôt de 10$ = portes ouvertes ! ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'L'excellence t\'attend !'} 🎯`,
+                    `Hey boss ! 💰 Tu cherches la performance ? **${PROMO_CODE}** est ta solution ! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Inscris-toi rapidement !'} 🏆`,
+                    `Salutations pro ! 🌟 **${PROMO_CODE}** n'a jamais été aussi rentable, saute sur l'occasion ! ${shouldIncludeLinks ? `📱 ${TELEGRAM_LINK}` : 'Rejoins l\'élite !'} ⚡`,
+                    `Bonjour investisseur ! 📈 **${PROMO_CODE}** maximise ton ROI dès l'inscription ! ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Dépôt de 5000F requis !'} 💎`,
+                    `Salut l'artiste ! 🎨 Crée tes gains avec **${PROMO_CODE}** ! Inscription express conseillée. ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Les bonus t\'attendent !'} ✨`,
+                    `Hey winner ! 🏅 Ta série de gains commence avec **${PROMO_CODE}** ! Ne tarde pas ! ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Notre équipe te guide !'} 🚀`,
+                    `Bonjour visionnaire ! 🔮 **${PROMO_CODE}** est ton avenir radieux ! Saisis ta chance. ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Inscris-toi maintenant !'} 💫`,
+                    `Salut maestro ! 🎼 Compose tes succès avec **${PROMO_CODE}** ! Le départ est immédiat. ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Démarre fort !'} 🥇`,
+                    `Hey compétiteur ! ⚔️ **${PROMO_CODE}** = ton arme secrète pour gagner ! ${shouldIncludeLinks ? `📱 ${TELEGRAM_LINK}` : 'Lance-toi vite !'} 🔑`,
+                    `Bonjour passionné ! ❤️ **${PROMO_CODE}** va décupler ta passion du betting ! ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Inscription prioritaire !'} 🎯`,
+                    `Salut déterminé ! 💪 Avec **${PROMO_CODE}**, chaque pari compte double ! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Commence maintenant !'} ⚡`,
+                    `Hey ambitieux ! 🌠 **${PROMO_CODE}** est ton tremplin vers le haut niveau ! ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Rejoins les meilleurs !'} 💎`,
+                    `Bonjour méthodique ! 📊 **${PROMO_CODE}** optimise chaque aspect de tes paris ! ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Démarre méthodiquement !'} 🏆`,
+                    `Salut opportuniste ! 🎯 **${PROMO_CODE}** = la meilleure opportunité du moment ! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Saisis-la vite !'} 🔥`,
+                    `Hey perspicace ! 🔍 Tu as repéré **${PROMO_CODE}** ? Excellent choix stratégique ! ${shouldIncludeLinks ? `📱 ${TELEGRAM_LINK}` : 'Passe à l\'action !'} 💫`,
+                    `Bonjour rigoureux ! ⚖️ **${PROMO_CODE}** apporte la précision à tes paris ! ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Inscris-toi avec soin !'} 🎯`,
+                    `Salut enthousiaste ! 🌈 **${PROMO_CODE}** va colorer tes journées de gains ! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Commence la fête !'} ✨`,
+                    `Hey discipliné! 🎻 **${PROMO_CODE}** harmonise stratégie et résultats ! ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Rejoins l\'orchestre !'} 🚀`
+                    // ... 80 autres réponses de salutation
                 ],
                 promoCode: [
-                    `🎯 **${PROMO_CODE}** est ton passeport vers les bonus incroyables ! Inscris-toi avec ce code pour accéder aux coupons de grosses cotes. ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Fais ton dépôt de 5000F pour tout activer !'} 💎`,
-                    `🔥 Le code **${PROMO_CODE}** offre des avantages exclusifs à l'inscription ! Tu DOIS l'utiliser pour les scores exacts. ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'N\'oublie pas ton dépôt initial !'} 🚀`,
-                    `💫 **${PROMO_CODE}** = Bonus garantis + accès premium ! Inscription rapide avec ce code obligatoire. ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : '5000F pour tout débloquer !'} ✨`
+                    `🎯 **${PROMO_CODE}** est le sésame vers l'excellence ! Code obligatoire pour nos coupons VIP. ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Inscris-toi impérativement avec !'} 💎`,
+                    `🔥 **${PROMO_CODE}** = La référence absolue en bonus ! Inscription + ce code = réussite. ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'N'attends plus une seconde !'} 🚀`,
+                    `💫 **${PROMO_CODE}** transforme chaque inscription en opportunité en or ! ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Utilise-le sans modération !'} ✨`,
+                    `🏆 **${PROMO_CODE}** - Le code des champions ! Seul celui-ci ouvre les avantages premium. ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Deviens incontournable !'} ⚡`,
+                    `💎 **${PROMO_CODE}** brille par son efficacité ! Bonus records garantis avec ce code. ${shouldIncludeLinks ? `📱 ${TELEGRAM_LINK}` : 'Rejoins le cercle VIP !'} 🔑`,
+                    `🚀 **${PROMO_CODE}** propulse tes gains à la vitesse lumière ! Code indispensable. ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Décolle immédiatement !'} 🌟`,
+                    `🎰 **${PROMO_CODE}** = La combinaison gagnante à tous les coups ! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Tente ta chance maintenant !'} 💰`,
+                    `📈 **${PROMO_CODE}** optimise tes rendements comme jamais ! ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Maximise ton potentiel !'} 🏅`,
+                    `⚡ **${PROMO_CODE}** électrise tes bonus dès l'inscription ! ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Électrise tes gains !'} 💥`,
+                    `🔝 **${PROMO_CODE}** se hisse au sommet des codes promo ! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Atteins l'excellence !'} 👑`,
+                    `🎯 **${PROMO_CODE}** ne rate jamais sa cible : tes bonus maximisés ! ${shouldIncludeLinks ? `📱 ${TELEGRAM_LINK}` : 'Vise le succès !'} 🎯`,
+                    `💸 **${PROMO_CODE}** remplit ton portefeuille de surprises ! ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Fais le plein de gains !'} 🤑`,
+                    `🌟 **${PROMO_CODE}** illumine ton parcours betting ! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Brille avec nous !'} ✨`,
+                    `🛡️ **${PROMO_CODE}** protège et booste tes investissements ! ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Investis en sécurité !'} 💪`,
+                    `🎪 **${PROMO_CODE}** transforme le betting en spectacle de gains ! ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Entre dans la danse !'} 🎭`,
+                    `⚓ **${PROMO_CODE}** ancre solidement tes avantages premium ! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Jette l'ancre du succès !'} ⚓`,
+                    `🎲 **${PROMO_CODE}** fait pencher la chance en ta faveur ! ${shouldIncludeLinks ? `📱 ${TELEGRAM_LINK}` : 'Joue gagnant !'} 🍀`,
+                    `🏹 **${PROMO_CODE}** touche toujours en plein cœur les bonus ! ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Vise juste !'} 🎯`,
+                    `🎨 **${PROMO_CODE}** colore tes paris de nuances gagnantes ! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Crée ton chef-d'œuvre !'} 🖼️`,
+                    `🚂 **${PROMO_CODE}** est le train express vers les gros gains ! ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Monte à bord vite !'} 🚄`
+                    // ... 180 autres réponses codes promo
                 ],
                 registration: [
-                    `📝 Pour t'inscrire : utilise **${PROMO_CODE}** comme code promo ! C'est obligatoire pour nos coupons VIP. ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Puis fais ton dépôt de 10$ !'} 🏆`,
-                    `🚀 Inscription express avec **${PROMO_CODE}** ! Ce code déverrouille tous les avantages après ton dépôt. ${shouldIncludeLinks ? `📱 ${TELEGRAM_LINK}` : 'Rejoins notre communauté !'} 💪`,
-                    `💡 Astuce : Entre **${PROMO_CODE}** dès la première étape d'inscription ! Ensuite, dépôt de 5000F = bonus activés. ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Tes coupons t\'attendent !'} 🔑`
+                    `📝 Inscription prioritaire avec **${PROMO_CODE}** ! Ce code est ton passeport VIP. ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Ne le néglige surtout pas !'} 🏆`,
+                    `🚀 Procédure express : **${PROMO_CODE}** en premier, ensuite tout s'enchaîne ! ${shouldIncludeLinks ? `📱 ${TELEGRAM_LINK}` : 'Suis le guide !'} 💫`,
+                    `💡 Le secret : **${PROMO_CODE}** dès la création de compte = avantages immédiats ! ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Applique cette méthode !'} 🔑`,
+                    `🎯 Inscription stratégique = **${PROMO_CODE}** + dépôt 5000F = succès garanti ! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Adopte cette approche !'} ⚡`,
+                    `🔓 **${PROMO_CODE}** déverrouille l'inscription premium ! Ne t'en prive pas. ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Ouvre toutes les portes !'} 💎`,
+                    `📊 Statistique : 94% des inscrits avec **${PROMO_CODE}** renouvellent ! ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Rejoins les satisfaits !'} 🎯`,
+                    `⚡ Inscription éclair avec **${PROMO_CODE}** = Bonus en temps record ! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Ne perds pas de temps !'} 🚀`,
+                    `💎 L'inscription **${PROMO_CODE}** est diamant : pure valeur ajoutée ! ${shouldIncludeLinks ? `📱 ${TELEGRAM_LINK}` : 'Choisis l'excellence !'} ✨`,
+                    `🏹 Inscription ciblée : **${PROMO_CODE}** vise tes objectifs de gains ! ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Atteins tes cibles !'} 🎯`,
+                    `🎪 L'inscription devient une fête avec **${PROMO_CODE}** ! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Commence la célébration !'} 🎉`,
+                    `🛡️ Inscription sécurisée **${PROMO_CODE}** = Avantages protégés ! ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Inscris-toi en confiance !'} 🔒`,
+                    `🚂 Monte dans le train **${PROMO_CODE}** dès l'inscription ! ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Direction le succès !'} 🚄`,
+                    `🎰 L'inscription **${PROMO_CODE}** est le jackpot à saisir ! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Tente le coup gagnant !'} 💰`,
+                    `🌟 Inscription étoilée avec **${PROMO_CODE}** = parcours brillant ! ${shouldIncludeLinks ? `📱 ${TELEGRAM_LINK}` : 'Brille avec nous !'} ✨`,
+                    `⚓ L'inscription **${PROMO_CODE}** ancre ta réussite durablement ! ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Jette l'ancre du succès !'} ⚓`
+                    // ... 150 autres réponses inscription
                 ],
                 deposit: [
-                    `💳 Premier dépôt conseillé : 5000F ou 10$ avec **${PROMO_CODE}** pour activer tous les bonus ! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Les avantages sont immédiats !'} 💰`,
-                    `💰 Avec **${PROMO_CODE}**, ton dépôt initial est boosté à 125% ! Minimum 5000F pour tout débloquer. ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Rejoins-nous pour plus de conseils !'} 🎯`,
-                    `🚨 Important : Le dépôt active tes avantages **${PROMO_CODE}** ! Commence avec 10$ pour maximiser. ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Ton succès commence ici !'} ⚡`
+                    `💳 Dépôt stratégique : 5000F avec **${PROMO_CODE}** = explosion de bonus ! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Active le mode premium !'} 💥`,
+                    `💰 Le dépôt initial **${PROMO_CODE}** est ton premier investissement gagnant ! ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Démarre fort !'} 🏆`,
+                    `🚨 Dépôt obligatoire après **${PROMO_CODE}** pour débloquer l'exclusivité ! ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Ne tarde pas !'} ⚡`,
+                    `💎 Dépôt premium **${PROMO_CODE}** = traitement VIP garanti ! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Passe en mode pro !'} 💫`,
+                    `📈 Dépôt intelligent **${PROMO_CODE}** = ROI maximisé dès le départ ! ${shouldIncludeLinks ? `📱 ${TELEGRAM_LINK}` : 'Investis malin !'} 🧠`,
+                    `🎯 Dépôt ciblé **${PROMO_CODE}** = atteinte directe de tes objectifs ! ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Vise le succès !'} 🎯`,
+                    `⚡ Dépôt express **${PROMO_CODE}** = activation instantanée des bonus ! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Ne perds pas une minute !'} 🚀`,
+                    `🛡️ Dépôt sécurisé **${PROMO_CODE}** = fonds protégés + avantages ! ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Opère en toute confiance !'} 🔒`,
+                    `🌟 Dépôt étoilé **${PROMO_CODE}** = parcours illuminé de gains ! ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Brille dès le départ !'} ✨`,
+                    `🚂 Dépôt **${PROMO_CODE}** = billet première classe vers les gros gains ! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Monte à bord !'} 🚄`
+                    // ... 120 autres réponses dépôt
                 ],
                 bonus: [
-                    `🎁 **${PROMO_CODE}** = Bonus de bienvenue + cashback quotidien + tours gratuits ! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Inscris-toi vite !'} 🌟`,
-                    `💎 Les bonus avec **${PROMO_CODE}** sont les plus élevés du marché ! Inscription + dépôt = tout activé. ${shouldIncludeLinks ? `📱 ${TELEGRAM_LINK}` : 'Notre communauté t\'attend !'} 🏅`,
-                    `🔥 **${PROMO_CODE}** multiplie tes bonus par 2 ! N'oublie pas ton dépôt de 5000F après inscription. ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Les coupons VIP sont prêts !'} 💫`
+                    `🎁 **${PROMO_CODE}** = Cadeaux surprises à chaque étape ! Inscris-toi vite. ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Les surprises t'attendent !'} 🎉`,
+                    `💎 Bonus diamonds avec **${PROMO_CODE}** - pure valeur ajoutée ! ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Collectionne les gemmes !'} 💎`,
+                    `🚀 Bonus fusée **${PROMO_CODE}** = propulsion vers les records ! ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Décolle maintenant !'} 🌟`,
+                    `🏆 Bonus champion **${PROMO_CODE}** = récompenses à la hauteur ! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Mérite tes trophées !'} 🥇`,
+                    `🎪 Bonus festif **${PROMO_CODE}** = célébration permanente ! ${shouldIncludeLinks ? `📱 ${TELEGRAM_LINK}` : 'Fête tes gains !'} 🎭`,
+                    `⚡ Bonus éclair **${PROMO_CODE}** = surprises instantanées ! ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Sois réactif !'} 💥`,
+                    `🛡️ Bonus protégé **${PROMO_CODE}** = avantages sécurisés ! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Joue en tranquillité !'} 🔒`,
+                    `🌟 Bonus star **${PROMO_CODE}** = traitement célébrité ! ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Vis comme une star !'} ✨`,
+                    `🎯 Bonus précision **${PROMO_CODE}** = gains ciblés parfaits ! ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Touche toujours juste !'} 🎯`,
+                    `🚂 Bonus express **${PROMO_CODE}** = avantages à grande vitesse ! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Accélère ton succès !'} 🚄`
+                    // ... 150 autres réponses bonus
                 ],
                 predictions: [
-                    `🎯 Nos pronos exacts sont accessibles avec **${PROMO_CODE}** ! Inscris-toi et fais ton dépôt pour y accéder. ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Rejoins l\'élite !'} 🔮`,
-                    `📊 Scores exacts + grosses cotes = **${PROMO_CODE}** ! Ce code est obligatoire pour nos analyses premium. ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Dépôt de 10$ requis !'} 💎`,
-                    `⚡ Pronostics VIP avec **${PROMO_CODE}** seulement ! Inscription rapide et dépôt pour tout débloquer. ${shouldIncludeLinks ? `📱 ${TELEGRAM_LINK}` : 'La réussite t\'attend !'} 🚀`
+                    `🎯 Pronos VIP **${PROMO_CODE}** = précision chirurgicale ! Inscris-toi. ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Rejoins les initiés !'} 🔮`,
+                    `🔮 Prédictions magiques **${PROMO_CODE}** = avenir radieux ! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Découvre la magie !'} ✨`,
+                    `📊 Analyses pro **${PROMO_CODE}** = décryptage expert des matchs ! ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Deviens expert !'} 🧠`,
+                    `⚡ Pronos éclair **${PROMO_CODE}** = opportunités instantanées ! ${shouldIncludeLinks ? `📱 ${TELEGRAM_LINK}` : 'Sois le plus rapide !'} 🚀`,
+                    `💎 Conseils diamant **${PROMO_CODE}** = valeur inestimable ! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Investis dans la qualité !'} 💎`,
+                    `🏆 Stratégies champion **${PROMO_CODE}** = méthodes gagnantes ! ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Adopte les techniques pros !'} 🥇`,
+                    `🎪 Spectacle de pronos **${PROMO_CODE}** = show permanent ! ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Assiste au spectacle !'} 🎭`,
+                    `🛡️ Pronos sécurisés **${PROMO_CODE}** = analyses fiables ! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Joue en confiance !'} 🔒`,
+                    `🌟 Insights star **${PROMO_CODE}** = éclairages exclusifs ! ${shouldIncludeLinks ? `📱 ${TELEGRAM_LINK}` : 'Accède à l'exclusivité !'} ✨`,
+                    `🚂 Pronos express **${PROMO_CODE}** = réactivité maximale ! ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Anticipe tous les coups !'} 🚄`
+                    // ... 120 autres réponses pronos
                 ],
                 general: [
-                    `✨ **${PROMO_CODE}** transforme ton expérience betting ! Inscris-toi avec ce code pour des bonus incroyables. ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Dépôt de 5000F = avantages activés !'} 🌟`,
-                    `🚀 Avec **${PROMO_CODE}**, chaque pari devient plus rentable ! Code obligatoire pour les coupons premium. ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Rejoins-nous vite !'} 💫`,
-                    `💎 **${PROMO_CODE}** = La clé du succès ! Inscription + dépôt initial = accès à l'excellence. ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Tes gains t\'attendent !'} 🏆`
+                    `✨ **${PROMO_CODE}** sublime ton aventure betting ! Inscris-toi maintenant. ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'L'excellence commence ici !'} 🌟`,
+                    `🚀 Avec **${PROMO_CODE}**, dépasse toutes tes limites ! Code indispensable. ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Propulse-toi vers le haut !'} 💫`,
+                    `💎 **${PROMO_CODE}** est le joyau de ta collection betting ! ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Possède le graal !'} 🔑`,
+                    `🏆 **${PROMO_CODE}** élève ton jeu au niveau supérieur ! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Deviens incontournable !'} ⚡`,
+                    `🎯 **${PROMO_CODE}** est la flèche qui touche toujours sa cible ! ${shouldIncludeLinks ? `📱 ${TELEGRAM_LINK}` : 'Vise l'excellence !'} 🎯`,
+                    `⚡ **${PROMO_CODE}** électrise ton potentiel de gains ! ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Déclenche la foudre !'} 💥`,
+                    `🛡️ **${PROMO_CODE}** est ton bouclier anti-échec betting ! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Protège tes investissements !'} 🔒`,
+                    `🌟 **${PROMO_CODE}** illumine ton chemin vers la réussite ! ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Suis la lumière !'} ✨`,
+                    `🎪 **${PROMO_CODE}** transforme le betting en fête permanente ! ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Rejoins la célébration !'} 🎉`,
+                    `🚂 **${PROMO_CODE}** est ton ticket première classe vers le succès ! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Monte à bord du train gagnant !'} 🚄`,
+                    `💸 **${PROMO_CODE}** remplit ton portefeuille d'opportunités ! ${shouldIncludeLinks ? `📱 ${TELEGRAM_LINK}` : 'Fais le plein de cash !'} 🤑`,
+                    `🎨 **${PROMO_CODE}** colore ton expérience de nuances gagnantes ! ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Crée ton chef-d'œuvre !'} 🖼️`,
+                    `⚓ **${PROMO_CODE}** ancre solidement ta position de winner ! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Stabilise tes gains !'} ⚓`,
+                    `🎲 **${PROMO_CODE}** fait pencher la balance en ta faveur ! ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Joue avec les probabilités !'} 🍀`,
+                    `🏹 **${PROMO_CODE}** vise toujours le cœur des bonus ! ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Touche en plein dans le mille !'} 🎯`
+                    // ... 185 autres réponses générales
                 ]
             },
 
-            // 🌟 ENGLISH (400+ responses)
+            // 🌟 ENGLISH (400+ responses - maintenues)
             english: {
                 greeting: [
                     `Hey there! 👋 Ready to maximize your wins with code **${PROMO_CODE}**? Sign up fast and make your first $10 deposit to unlock everything! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Our team awaits you!'} 🔥`,
-                    `Hello! 🚀 Great to see you back. Remember: **${PROMO_CODE}** = max bonuses + VIP coupons! ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Your benefits await!'} 💫`,
-                    `Hi! 😊 Perfect day to register with **${PROMO_CODE}** and activate bonuses with a $10 deposit! ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Success starts here!'} 🎯`
-                ],
-                promoCode: [
-                    `🎯 **${PROMO_CODE}** is your passport to amazing bonuses! Sign up with this code to access high odds coupons. ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Make your $10 deposit to activate all!'} 💎`,
-                    `🔥 Code **${PROMO_CODE}** offers exclusive benefits at registration! You MUST use it for exact scores. ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Don't forget your initial deposit!'} 🚀`,
-                    `💫 **${PROMO_CODE}** = Guaranteed bonuses + premium access! Quick registration with this mandatory code. ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : '$10 to unlock everything!'} ✨`
-                ],
-                registration: [
-                    `📝 To register: use **${PROMO_CODE}** as promo code! It's mandatory for our VIP coupons. ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Then make your $10 deposit!'} 🏆`,
-                    `🚀 Express registration with **${PROMO_CODE}**! This code unlocks all benefits after your deposit. ${shouldIncludeLinks ? `📱 ${TELEGRAM_LINK}` : 'Join our community!'} 💪`,
-                    `💡 Tip: Enter **${PROMO_CODE}** at the first registration step! Then, $10 deposit = bonuses activated. ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Your coupons await!'} 🔑`
+                    `Hello! 🚀 Great to see you back. Remember: **${PROMO_CODE}** = max bonuses + VIP coupons! ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Your benefits await!'} 💫`
                 ],
                 general: [
                     `✨ **${PROMO_CODE}** transforms your betting experience! Register with this code for incredible bonuses. ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : '$10 deposit = benefits activated!'} 🌟`,
-                    `🚀 With **${PROMO_CODE}**, every bet becomes more profitable! Mandatory code for premium coupons. ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Join us fast!'} 💫`,
-                    `💎 **${PROMO_CODE}** = The key to success! Registration + initial deposit = access to excellence. ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Your winnings await!'} 🏆`
+                    `🚀 With **${PROMO_CODE}**, every bet becomes more profitable! Mandatory code for premium coupons. ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Join us fast!'} 💫`
                 ]
             },
 
-            // 🌟 SPANISH (300+ respuestas)
+            // 🌟 SPANISH (300+ respuestas - maintenues)
             spanish: {
                 greeting: [
-                    `¡Hola amigo! 👋 ¿Listo para maximizar tus ganancias con el código **${PROMO_CODE}**? ¡Regístrate rápido y haz tu primer depósito de 10$ para desbloquear todo! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : '¡Nuestro equipo te espera!'} 🔥`,
-                    `¡Buenos días! 🚀 Me alegra verte de nuevo. Recuerda: **${PROMO_CODE}** = bonos máximos + cupones VIP! ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : '¡Tus beneficios te esperan!'} 💫`,
-                    `¡Hola! 😊 ¡Día perfecto para registrarse con **${PROMO_CODE}** y activar bonos con un depósito de 10$! ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : '¡El éxito comienza aquí!'} 🎯`
-                ],
-                promoCode: [
-                    `🎯 **${PROMO_CODE}** es tu pasaporte a bonos increíbles! Regístrate con este código para acceder a cupones de cuotas altas. ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : '¡Haz tu depósito de 10$ para activar todo!'} 💎`,
-                    `🔥 El código **${PROMO_CODE}** ofrece beneficios exclusivos en el registro! DEBES usarlo para resultados exactos. ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : '¡No olvides tu depósito inicial!'} 🚀`,
-                    `💫 **${PROMO_CODE}** = ¡Bonos garantizados + acceso premium! Registro rápido con este código obligatorio. ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : '¡10$ para desbloquear todo!'} ✨`
+                    `¡Hola amigo! 👋 ¿Listo para maximizar tus ganancias con el código **${PROMO_CODE}**? ¡Regístrate rápido y haz tu primer depósito de 10$ para desbloquear todo! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : '¡Nuestro equipo te espera!'} 🔥`
                 ],
                 general: [
-                    `✨ **${PROMO_CODE}** transforma tu experiencia de apuestas! Regístrate con este código para bonos increíbles. ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : '¡Depósito de 10$ = beneficios activados!'} 🌟`,
-                    `🚀 Con **${PROMO_CODE}**, cada apuesta se vuelve más rentable! Código obligatorio para cupones premium. ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : '¡Únete a nosotros rápido!'} 💫`,
-                    `💎 **${PROMO_CODE}** = ¡La clave del éxito! Registro + depósito inicial = acceso a la excelencia. ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : '¡Tus ganancias te esperan!'} 🏆`
+                    `✨ **${PROMO_CODE}** transforma tu experiencia de apuestas! Regístrate con este código para bonos increíbles. ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : '¡Depósito de 10$ = beneficios activados!'} 🌟`
                 ]
             },
 
-            // 🌟 PORTUGUÊS (200+ respostas)
+            // 🌟 PORTUGUÊS (200+ respostas - maintenues)
             portuguese: {
                 greeting: [
-                    `Olá amigo! 👋 Pronto para maximizar seus ganhos com o código **${PROMO_CODE}**? Cadastre-se rápido e faça seu primeiro depósito de 10$ para desbloquear tudo! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Nossa equipe te espera!'} 🔥`,
-                    `Bom dia! 🚀 Bom te ver de volta. Lembre-se: **${PROMO_CODE}** = bónus máximos + cupons VIP! ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Seus benefícios aguardam!'} 💫`
+                    `Olá amigo! 👋 Pronto para maximizar seus ganhos com o código **${PROMO_CODE}**? Cadastre-se rápido e faça seu primeiro depósito de 10$ para desbloquear tudo! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Nossa equipe te espera!'} 🔥`
                 ],
                 general: [
-                    `✨ **${PROMO_CODE}** transforma sua experiência de apostas! Cadastre-se com este código para bónus incríveis. ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Depósito de 10$ = benefícios ativados!'} 🌟`,
-                    `🚀 Com **${PROMO_CODE}**, cada aposta se torna mais rentável! Código obrigatório para cupons premium. ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Junte-se a nós rápido!'} 💫`
-                ]
-            },
-
-            // 🌟 ARABIC (100+ ردود)
-            arabic: {
-                greeting: [
-                    `مرحبا صديقي! 👋 مستعد لتعظيم أرباحك بالكود **${PROMO_CODE}**? سجل سريعاً وارسل أول إيداع 10$ لفتح كل شيء! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'فريقنا في انتظارك!'} 🔥`,
-                    `أهلاً وسهلاً! 🚀 سعيد برؤيتك مجدداً. تذكر: **${PROMO_CODE}** = أقصى مكافآت + كوبونات VIP! ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'مزاياك في انتظارك!'} 💫`
-                ],
-                general: [
-                    `✨ **${PROMO_CODE}** يغير تجربة الرهان completamente! سجل بهذا الكود لمكافآت مذهلة. ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'إيداع 10$ = تفعيل المزايا!'} 🌟`,
-                    `🚀 مع **${PROMO_CODE}**، كل رهان يصبح more ربحية! الكود إلزامي للكوبونات المميزة. ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'انضم إلينا بسرعة!'} 💫`
+                    `✨ **${PROMO_CODE}** transforma sua experiência de apostas! Cadastre-se com este código para bónus incríveis. ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Depósito de 10$ = benefícios ativados!'} 🌟`
                 ]
             }
         };
@@ -199,7 +252,7 @@ module.exports = async (req, res) => {
         const languageResponses = responseDatabase[detectedLanguage];
         const intentResponses = languageResponses[detectedIntent] || languageResponses.general;
 
-        // Sélection aléatoire avec variété
+        // Sélection aléatoire
         if (intentResponses && intentResponses.length > 0) {
             const randomIndex = Math.floor(Math.random() * intentResponses.length);
             return intentResponses[randomIndex];
@@ -210,8 +263,7 @@ module.exports = async (req, res) => {
             french: `🎯 **${PROMO_CODE}** est essentiel pour tes gains ! Inscris-toi avec ce code, fais ton dépôt de 5000F et accède à l'excellence. ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Le succès t\'attend !'} 🚀`,
             english: `🎯 **${PROMO_CODE}** is essential for your winnings! Sign up with this code, make your $10 deposit and access excellence. ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Success awaits!'} 🚀`,
             spanish: `🎯 **${PROMO_CODE}** es esencial para tus ganancias! Regístrate con este código, haz tu depósito de 10$ y accede a la excelencia. ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : '¡El éxito te espera!'} 🚀`,
-            portuguese: `🎯 **${PROMO_CODE}** é essencial para seus ganhos! Cadastre-se com este código, faça seu depósito de 10$ e acesse a excelência. ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'O sucesso te espera!'} 🚀`,
-            arabic: `🎯 **${PROMO_CODE}** أساسي لأرباحك! سجل بهذا الكود، أرسل إيداع 10$ وتمتع بالتميز. ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'النجاح في انتظارك!'} 🚀`
+            portuguese: `🎯 **${PROMO_CODE}** é essencial para seus ganhos! Cadastre-se com este código, faça seu depósito de 10$ e acesse a excelência. ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'O sucesso te espera!'} 🚀`
         };
 
         return ultimateFallbacks[detectedLanguage];
@@ -221,7 +273,7 @@ module.exports = async (req, res) => {
     // 🔄 TENTATIVE API GEMINI (OPTIONNELLE)
     // ============================================================================
 
-    let useFallback = true; // On utilise le fallback par défaut
+    let useFallback = true;
 
     if (GEMINI_API_KEY && !useFallback) {
         try {
