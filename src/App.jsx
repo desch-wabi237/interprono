@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 // --- Définitions et Constantes Globales ---
-const PROMO_CODE = "TAR72";
-const BOT_NAME = "TAR72PRONOSTIC";
+const PROMO_CODE = "JAX72";
+const BOT_NAME = "JAX72PRONOSTIC";
 
 // Liens affiliés et sociaux
 const AFFILIATE_LINK = "https://refpa58144.com/L?tag=d_4708581m_1573c_&site=4708581&ad=1573";
@@ -10,10 +10,20 @@ const WHATSAPP_LINK = "https://whatsapp.com/channel/0029VbBRgnhEawdxneZ5To1i";
 const TELEGRAM_LINK = "https://t.me/+tuopCS5aGEk3ZWZk";
 const MELBET_LINK = "https://melbet.com";
 
-// La route que le client va appeler (cette route sera gérée par la fonction Serverless)
+// La route que le client va appeler
 const API_ROUTE = "/api/chat"; 
 
-// --- LOGIQUE D'INTÉGRATION GEMINI (Via Proxy Serverless) ---
+// --- Reconnaissance Vocale ---
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+
+if (recognition) {
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  recognition.lang = 'fr-FR';
+}
+
+// --- LOGIQUE D'INTÉGRATION GEMINI ---
 const getAiResponse = async (userQuery, maxRetries = 5) => {
     for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
@@ -39,7 +49,7 @@ const getAiResponse = async (userQuery, maxRetries = 5) => {
         } catch (error) {
             console.error("Tentative API échouée:", error);
             if (attempt === maxRetries - 1) {
-                return `🚨 Erreur de connexion au service IA : ${error.message}. Si vous êtes en local, assurez-vous que votre fonction Serverless (\`/api/chat.js\`) est lancée. Code promo : **${PROMO_CODE}**.`;
+                return `🚨 Erreur de connexion au service IA : ${error.message}. Code promo : **${PROMO_CODE}**.`;
             }
             const delay = Math.pow(2, attempt) * 1000;
             await new Promise(resolve => setTimeout(resolve, delay));
@@ -53,21 +63,90 @@ const App = () => {
     const [messages, setMessages] = useState([
         { 
             id: 1, 
-            text: `Bonjour ! Je suis ${BOT_NAME}, votre assistant personnel pour les meilleurs bonus. Mon objectif est simple : vous assurer le **BONUS MAXIMAL** sur 1xBet et Melbet grâce au code **${PROMO_CODE}**. Que puis-je faire pour vous aujourd'hui ?`, 
+            text: `🌙 **Bienvenue chez ${BOT_NAME}** ! 🚀\n\nJe suis votre expert en bonus betting. Utilisez le code **${PROMO_CODE}** pour obtenir le **BONUS MAXIMUM** sur 1xBet et Melbet. Comment puis-je vous aider ?`, 
             sender: 'bot', 
             isTyping: false 
         }
     ]);
     const [input, setInput] = useState('');
     const [isBotTyping, setIsBotTyping] = useState(false);
+    const [isListening, setIsListening] = useState(false);
+    const [selectedImage, setSelectedImage] = useState(null);
 
     const messagesEndRef = useRef(null);
+    const fileInputRef = useRef(null);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
 
     useEffect(scrollToBottom, [messages]);
+
+    // --- Reconnaissance Vocale ---
+    const startListening = () => {
+        if (!recognition) {
+            alert("La reconnaissance vocale n'est pas supportée sur ce navigateur.");
+            return;
+        }
+
+        setIsListening(true);
+        recognition.start();
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            setInput(transcript);
+            setIsListening(false);
+        };
+
+        recognition.onerror = (event) => {
+            console.error("Erreur reconnaissance vocale:", event.error);
+            setIsListening(false);
+        };
+
+        recognition.onend = () => {
+            setIsListening(false);
+        };
+    };
+
+    const stopListening = () => {
+        if (recognition) {
+            recognition.stop();
+        }
+        setIsListening(false);
+    };
+
+    // --- Gestion des Fichiers Images ---
+    const handleImageUpload = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    setSelectedImage(e.target.result);
+                    
+                    // Ajouter un message avec l'image
+                    const newImageMessage = {
+                        id: Date.now(),
+                        text: `📸 Image importée: ${file.name}`,
+                        sender: 'user',
+                        isTyping: false,
+                        image: e.target.result
+                    };
+                    setMessages(prev => [...prev, newImageMessage]);
+                    
+                    // Réinitialiser l'input file
+                    event.target.value = '';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                alert("Veuillez sélectionner un fichier image valide.");
+            }
+        }
+    };
+
+    const removeImage = () => {
+        setSelectedImage(null);
+    };
 
     const formatMessageText = useCallback((text) => {
         const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -80,13 +159,13 @@ const App = () => {
                 let display = url.length > 50 ? url.substring(0, 50) + '...' : url;
                 
                 if (url.includes('1xbet') || url.includes('refpa58144')) {
-                    display = "🎰 1xBet - Inscription avec Bonus Max 🚀";
+                    display = "🎰 1xBet - Bonus Exclusif 🚀";
                 } else if (url.includes('melbet')) {
-                    display = "🎲 MelBet - Plateforme de Paris Sportifs 🏆";
+                    display = "🎲 MelBet - Offre Spéciale 🏆";
                 } else if (url.includes('whatsapp')) {
-                    display = "💬 Rejoindre notre WhatsApp";
+                    display = "💬 WhatsApp - Pronostics Gratuits";
                 } else if (url.includes('telegram') || url.includes('t.me')) {
-                    display = "📢 Rejoindre notre Telegram";
+                    display = "📢 Telegram - Analyses Expert";
                 }
                 
                 return (
@@ -116,22 +195,27 @@ const App = () => {
     const handleSend = async (e) => {
         e.preventDefault();
         const trimmedInput = input.trim();
-        if (!trimmedInput) return;
+        if (!trimmedInput && !selectedImage) return;
         
-        const newUserMessage = { 
-            id: Date.now(), 
-            text: trimmedInput, 
-            sender: 'user', 
-            isTyping: false 
-        };
-        setMessages(prev => [...prev, newUserMessage]);
+        // Message texte
+        if (trimmedInput) {
+            const newUserMessage = { 
+                id: Date.now(), 
+                text: trimmedInput, 
+                sender: 'user', 
+                isTyping: false 
+            };
+            setMessages(prev => [...prev, newUserMessage]);
+        }
+        
         setInput('');
+        setSelectedImage(null);
         
         setIsBotTyping(true);
         let botResponseText = "";
 
         try {
-            botResponseText = await getAiResponse(trimmedInput);
+            botResponseText = await getAiResponse(trimmedInput || "L'utilisateur a partagé une image");
         } catch (error) {
             console.error("Erreur de traitement:", error);
             botResponseText = "🚨 Une erreur de traitement inattendue est survenue.";
@@ -159,6 +243,11 @@ const App = () => {
                 <div 
                     className={`message-bubble ${isBot ? 'bot-bubble' : 'user-bubble'}`}
                 >
+                    {message.image && (
+                        <div className="image-container">
+                            <img src={message.image} alt="Uploaded" className="uploaded-image" />
+                        </div>
+                    )}
                     {formatMessageText(message.text)}
                 </div>
             </div>
@@ -174,12 +263,18 @@ const App = () => {
                     box-sizing: border-box;
                     margin: 0;
                     padding: 0;
+                    -webkit-tap-highlight-color: transparent;
+                }
+
+                html, body {
+                    height: 100%;
+                    overflow: hidden;
                 }
 
                 .app-container {
                     min-height: 100vh;
                     min-height: 100dvh;
-                    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+                    background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #2d2d2d 100%);
                     display: flex;
                     align-items: center;
                     justify-content: center;
@@ -191,6 +286,8 @@ const App = () => {
                     right: 0;
                     bottom: 0;
                     width: 100%;
+                    color: #e0e0e0;
+                    touch-action: manipulation;
                 }
                 
                 .chat-card {
@@ -198,73 +295,100 @@ const App = () => {
                     height: 100%;
                     display: flex;
                     flex-direction: column;
-                    background: #1a202c;
+                    background: rgba(18, 18, 18, 0.95);
+                    backdrop-filter: blur(20px);
                     overflow: hidden;
                     position: relative;
+                    border: 1px solid rgba(255, 255, 255, 0.1);
                 }
 
-                /* Header sombre */
+                /* Header sombre avec accent - OPTIMISÉ MOBILE */
                 .chat-header {
-                    padding: 15px 20px;
-                    background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
-                    border-bottom: 1px solid #4a5568;
+                    padding: 12px 16px;
+                    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
                     display: flex;
                     align-items: center;
-                    justify-content: center;
-                    min-height: 70px;
+                    justify-content: space-between;
+                    min-height: 60px;
                     flex-shrink: 0;
+                    position: relative;
+                    overflow: hidden;
+                }
+
+                .chat-header::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: linear-gradient(45deg, rgba(74, 74, 240, 0.1) 0%, transparent 50%);
+                    pointer-events: none;
                 }
 
                 .header-content {
                     display: flex;
                     align-items: center;
-                    justify-content: center;
                     flex: 1;
                     min-width: 0;
+                    position: relative;
+                    z-index: 2;
+                    gap: 10px;
                 }
 
                 .status-dot {
                     height: 10px;
                     width: 10px;
                     border-radius: 50%;
-                    margin-right: 12px;
                     flex-shrink: 0;
-                    background-color: #68d391;
+                    background: linear-gradient(135deg, #4a4af0, #8b5cf6);
+                    box-shadow: 0 0 10px rgba(74, 74, 240, 0.5);
                 }
 
                 .status-dot.typing {
-                    background-color: #68d391;
                     animation: pulse 1.5s infinite;
                 }
 
+                .status-dot.listening {
+                    background: linear-gradient(135deg, #ef4444, #f59e0b);
+                    animation: pulse 0.8s infinite;
+                }
+
                 .header-title {
-                    font-size: 18px;
-                    font-weight: 600;
-                    color: #e2e8f0;
+                    font-size: 16px;
+                    font-weight: 700;
+                    color: #ffffff;
                     white-space: nowrap;
                     overflow: hidden;
                     text-overflow: ellipsis;
+                    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+                    flex: 1;
+                    min-width: 0;
                 }
 
                 .header-subtitle {
                     font-size: 12px;
-                    font-weight: 500;
-                    color: #f6e05e;
-                    background: rgba(246, 224, 94, 0.15);
+                    font-weight: 600;
+                    color: #8b5cf6;
+                    background: rgba(139, 92, 246, 0.2);
                     padding: 4px 8px;
-                    border-radius: 6px;
-                    margin-left: 8px;
+                    border-radius: 12px;
                     white-space: nowrap;
+                    border: 1px solid rgba(139, 92, 246, 0.3);
+                    backdrop-filter: blur(10px);
+                    flex-shrink: 0;
                 }
 
-                /* Bannières avec dégradés doux */
+                /* Bannières sombres - OPTIMISÉ MOBILE */
                 .banner-container {
                     display: flex;
-                    gap: 10px;
+                    gap: 8px;
                     padding: 12px;
-                    background: #2d3748;
-                    border-bottom: 1px solid #4a5568;
+                    background: rgba(26, 26, 26, 0.9);
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
                     flex-shrink: 0;
+                    backdrop-filter: blur(10px);
                 }
 
                 .bet-banner {
@@ -274,49 +398,63 @@ const App = () => {
                     text-align: center;
                     text-decoration: none;
                     font-weight: 600;
-                    font-size: 13px;
+                    font-size: 12px;
                     transition: all 0.3s ease;
                     min-height: 44px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    border: none;
+                    border: 1px solid rgba(255, 255, 255, 0.1);
                     color: white;
-                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+                    position: relative;
+                    overflow: hidden;
                 }
 
-                /* Dégradé bleu doux pour 1xBet */
+                .bet-banner::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: -100%;
+                    width: 100%;
+                    height: 100%;
+                    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+                    transition: left 0.6s;
+                }
+
+                .bet-banner:hover::before {
+                    left: 100%;
+                }
+
                 .bet-banner-1xbet {
-                    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+                    background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
                 }
 
-                .bet-banner-1xbet:hover {
-                    background: linear-gradient(135deg, #3da8e8 0%, #2c8fd1 100%);
+                .bet-banner-1xbet:active {
                     transform: translateY(-1px);
-                    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+                    box-shadow: 0 6px 20px rgba(30, 58, 138, 0.4);
                 }
 
-                /* Dégradé jaune doux pour MelBet */
                 .bet-banner-melbet {
-                    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+                    background: linear-gradient(135deg, #7c2d12 0%, #9a3412 100%);
                 }
 
-                .bet-banner-melbet:hover {
-                    background: linear-gradient(135deg, #f4b142 0%, #eb9532 100%);
+                .bet-banner-melbet:active {
                     transform: translateY(-1px);
-                    box-shadow: 0 4px 12px rgba(243, 156, 18, 0.4);
+                    box-shadow: 0 6px 20px rgba(124, 45, 18, 0.4);
                 }
 
-                /* Zone des messages sombre */
+                /* Zone des messages sombre - OPTIMISÉ MOBILE */
                 .messages-area {
                     flex: 1;
                     overflow-y: auto;
-                    padding: 15px;
+                    padding: 16px;
                     display: flex;
                     flex-direction: column;
                     gap: 12px;
-                    background: #1a202c;
+                    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
                     -webkit-overflow-scrolling: touch;
+                    min-height: 0;
                 }
 
                 .message-row {
@@ -336,34 +474,42 @@ const App = () => {
                     max-width: 85%;
                     padding: 14px 16px;
                     border-radius: 16px;
-                    font-size: 15px;
+                    font-size: 14px;
                     line-height: 1.4;
                     word-wrap: break-word;
-                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+                    position: relative;
+                    backdrop-filter: blur(10px);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
                 }
 
                 .bot-bubble {
-                    background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
-                    border: 1px solid #4a5568;
-                    color: #e2e8f0;
+                    background: rgba(39, 39, 42, 0.9);
+                    color: #e4e4e7;
+                    border-bottom-left-radius: 6px;
                 }
 
                 .user-bubble {
-                    background: linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%);
+                    background: linear-gradient(135deg, #1e40af 0%, #3730a3 100%);
                     color: white;
+                    border-bottom-right-radius: 6px;
                 }
 
                 .promo-code-bold {
                     font-weight: 700;
-                    color: #f6e05e;
+                    color: #8b5cf6;
+                }
+
+                .user-bubble .promo-code-bold {
+                    color: #fbbf24;
                 }
 
                 .link-anchor {
-                    font-size: 14px;
+                    font-size: 13px;
                     font-weight: 600;
                     text-decoration: none;
                     color: white;
-                    background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+                    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
                     padding: 10px 14px;
                     border-radius: 8px;
                     display: block;
@@ -374,54 +520,136 @@ const App = () => {
                     align-items: center;
                     justify-content: center;
                     transition: all 0.3s ease;
-                    box-shadow: 0 2px 8px rgba(56, 161, 105, 0.3);
+                    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+                    border: 1px solid rgba(59, 130, 246, 0.3);
                 }
 
-                .link-anchor:hover {
+                .link-anchor:active {
                     transform: translateY(-1px);
-                    box-shadow: 0 4px 12px rgba(56, 161, 105, 0.4);
+                    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
                 }
 
-                /* CORRECTION : Input area avec texte visible */
+                /* Conteneur d'image - OPTIMISÉ MOBILE */
+                .image-container {
+                    margin-bottom: 10px;
+                    border-radius: 10px;
+                    overflow: hidden;
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                }
+
+                .uploaded-image {
+                    width: 100%;
+                    max-width: 250px;
+                    height: auto;
+                    border-radius: 10px;
+                    display: block;
+                }
+
+                /* Zone de saisie sombre avec boutons - OPTIMISÉ MOBILE */
                 .input-form {
-                    padding: 15px;
-                    border-top: 1px solid #4a5568;
+                    padding: 16px;
+                    border-top: 1px solid rgba(255, 255, 255, 0.1);
                     display: flex;
-                    background: #2d3748;
-                    gap: 10px;
+                    flex-direction: column;
+                    background: rgba(23, 23, 23, 0.95);
+                    gap: 12px;
                     flex-shrink: 0;
+                    backdrop-filter: blur(10px);
+                }
+
+                .input-main-row {
+                    display: flex;
+                    gap: 10px;
+                    align-items: flex-end;
+                    width: 100%;
+                }
+
+                .input-container {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                    min-width: 0;
                 }
 
                 .chat-input {
-                    flex: 1;
                     padding: 14px 16px;
                     border-radius: 12px;
-                    border: 1px solid #4a5568;
-                    background: #ffffff; /* Fond blanc pour voir le texte */
-                    color: #2d3748; /* Texte foncé pour contraste */
+                    border: 2px solid rgba(255, 255, 255, 0.1);
+                    background: rgba(39, 39, 42, 0.9);
+                    color: #e4e4e7;
                     font-size: 16px;
                     min-height: 50px;
                     -webkit-appearance: none;
                     transition: all 0.3s ease;
+                    font-weight: 500;
+                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+                    width: 100%;
                 }
 
                 .chat-input:focus {
                     outline: none;
-                    border-color: #4299e1;
-                    background: #ffffff;
-                    box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.2);
+                    border-color: #8b5cf6;
+                    background: rgba(39, 39, 42, 1);
+                    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.3);
                 }
 
                 .chat-input::placeholder {
-                    color: #718096; /* Placeholder gris */
+                    color: #9ca3af;
+                    font-weight: 500;
+                }
+
+                .action-buttons {
+                    display: flex;
+                    gap: 8px;
+                    justify-content: center;
+                    width: 100%;
+                    padding: 4px 0;
+                }
+
+                .icon-button {
+                    padding: 12px;
+                    border-radius: 10px;
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    background: rgba(39, 39, 42, 0.9);
+                    color: #9ca3af;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    min-width: 44px;
+                    min-height: 44px;
+                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+                    font-size: 16px;
+                }
+
+                .icon-button:active {
+                    background: rgba(55, 55, 60, 0.9);
+                    color: #e4e4e7;
+                    border-color: rgba(255, 255, 255, 0.2);
+                    transform: translateY(-1px);
+                }
+
+                .icon-button.recording {
+                    background: rgba(239, 68, 68, 0.2);
+                    color: #ef4444;
+                    border-color: rgba(239, 68, 68, 0.3);
+                    animation: pulse 1s infinite;
+                }
+
+                .icon-button.upload {
+                    background: rgba(34, 197, 94, 0.2);
+                    color: #22c55e;
+                    border-color: rgba(34, 197, 94, 0.3);
                 }
 
                 .chat-button {
                     padding: 14px 20px;
                     border-radius: 12px;
-                    font-weight: 600;
+                    font-weight: 700;
                     font-size: 16px;
-                    background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+                    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
                     color: white;
                     border: none;
                     min-height: 50px;
@@ -429,12 +657,14 @@ const App = () => {
                     -webkit-appearance: none;
                     transition: all 0.3s ease;
                     cursor: pointer;
-                    box-shadow: 0 2px 8px rgba(56, 161, 105, 0.3);
+                    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.3);
+                    border: 1px solid rgba(139, 92, 246, 0.3);
+                    flex-shrink: 0;
                 }
 
-                .chat-button:hover:not(:disabled) {
+                .chat-button:active:not(:disabled) {
                     transform: translateY(-1px);
-                    box-shadow: 0 4px 12px rgba(56, 161, 105, 0.4);
+                    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
                 }
 
                 .chat-button:disabled {
@@ -442,6 +672,59 @@ const App = () => {
                     cursor: not-allowed;
                     transform: none;
                     box-shadow: none;
+                }
+
+                /* Aperçu image sélectionnée */
+                .image-preview {
+                    margin-top: 8px;
+                    padding: 10px;
+                    background: rgba(39, 39, 42, 0.9);
+                    border-radius: 10px;
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+
+                .preview-image {
+                    width: 50px;
+                    height: 50px;
+                    border-radius: 8px;
+                    object-fit: cover;
+                    flex-shrink: 0;
+                }
+
+                .preview-info {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
+                    min-width: 0;
+                }
+
+                .preview-name {
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: #e4e4e7;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+                .remove-image {
+                    background: rgba(239, 68, 68, 0.2);
+                    color: #ef4444;
+                    border: 1px solid rgba(239, 68, 68, 0.3);
+                    border-radius: 6px;
+                    padding: 6px 10px;
+                    font-size: 11px;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    white-space: nowrap;
+                }
+
+                .remove-image:active {
+                    background: rgba(239, 68, 68, 0.3);
                 }
 
                 /* Typing indicator sombre */
@@ -452,173 +735,97 @@ const App = () => {
                 }
 
                 .typing-indicator-dots {
-                    padding: 12px 16px;
+                    padding: 14px 16px;
                     border-radius: 16px;
-                    background: #2d3748;
-                    border: 1px solid #4a5568;
+                    background: rgba(39, 39, 42, 0.9);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
                     display: flex;
                     align-items: center;
-                    gap: 5px;
+                    gap: 6px;
+                    backdrop-filter: blur(10px);
+                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
                 }
 
                 .dot {
                     height: 8px;
                     width: 8px;
-                    background: #68d391;
+                    background: linear-gradient(135deg, #8b5cf6, #a855f7);
                     border-radius: 50%;
                     animation: bounce 1.4s infinite;
                 }
 
-                /* Animations douces */
+                .dot:nth-child(2) { animation-delay: 0.2s; }
+                .dot:nth-child(3) { animation-delay: 0.4s; }
+
+                /* Animations */
                 @keyframes pulse {
-                    0%, 100% { opacity: 1; }
-                    50% { opacity: 0.7; }
+                    0%, 100% { 
+                        opacity: 1;
+                        transform: scale(1);
+                    }
+                    50% { 
+                        opacity: 0.7;
+                        transform: scale(1.1);
+                    }
                 }
 
                 @keyframes bounce {
-                    0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
-                    40% { transform: scale(1.1); opacity: 1; }
-                }
-
-                /* Media Queries pour desktop */
-                @media (min-width: 769px) {
-                    .app-container {
-                        padding: 20px;
-                        position: relative;
+                    0%, 80%, 100% { 
+                        transform: scale(0.8);
+                        opacity: 0.5;
                     }
-
-                    .chat-card {
-                        width: 100%;
-                        max-width: 800px;
-                        height: 90vh;
-                        border-radius: 16px;
-                        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-                    }
-
-                    .chat-header {
-                        padding: 20px;
-                        min-height: 80px;
-                        border-radius: 16px 16px 0 0;
-                        background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
-                    }
-
-                    .header-title {
-                        font-size: 20px;
-                        font-weight: 600;
-                        color: #e2e8f0;
-                    }
-
-                    .header-subtitle {
-                        font-size: 13px;
-                        background: rgba(246, 224, 94, 0.2);
-                        color: #f6e05e;
-                        padding: 5px 10px;
-                        border-radius: 8px;
-                        border: 1px solid rgba(246, 224, 94, 0.3);
-                    }
-
-                    .banner-container {
-                        padding: 15px;
-                        gap: 12px;
-                        background: #2d3748;
-                    }
-
-                    .bet-banner {
-                        padding: 14px 12px;
-                        font-size: 14px;
-                        font-weight: 600;
-                        border-radius: 10px;
-                    }
-
-                    .bet-banner:hover {
-                        transform: translateY(-2px);
-                    }
-
-                    .messages-area {
-                        padding: 20px;
-                        background: #1a202c;
-                    }
-
-                    .message-bubble {
-                        max-width: 70%;
-                        padding: 16px 20px;
-                        font-size: 15px;
-                        border-radius: 18px;
-                    }
-
-                    .input-form {
-                        padding: 20px;
-                        gap: 12px;
-                        background: #2d3748;
-                        border-top: 1px solid #4a5568;
-                        border-radius: 0 0 16px 16px;
-                    }
-
-                    .chat-input {
-                        padding: 16px 20px;
-                        font-size: 16px;
-                        border-radius: 14px;
-                        background: #ffffff;
-                        color: #2d3748;
-                    }
-
-                    .chat-button {
-                        padding: 16px 24px;
-                        font-size: 16px;
-                        border-radius: 14px;
-                        min-width: 100px;
-                    }
-
-                    .chat-button:hover:not(:disabled) {
-                        transform: translateY(-2px);
+                    40% { 
+                        transform: scale(1.1);
+                        opacity: 1;
                     }
                 }
 
-                /* Très petits écrans */
+                /* ===== MEDIA QUERIES POUR MOBILE ===== */
+                
+                /* Petits téléphones (iPhone SE, etc.) */
                 @media (max-width: 360px) {
                     .chat-header {
-                        padding: 12px 15px;
+                        padding: 10px 12px;
+                        min-height: 55px;
                     }
 
                     .header-title {
-                        font-size: 16px;
+                        font-size: 14px;
                     }
 
                     .header-subtitle {
-                        font-size: 11px;
-                        margin-left: 6px;
+                        font-size: 10px;
                         padding: 3px 6px;
                     }
 
                     .banner-container {
                         padding: 10px;
-                        gap: 8px;
-                        flex-direction: row;
-                        overflow-x: auto;
-                        flex-wrap: nowrap;
-                        justify-content: space-between;
+                        gap: 6px;
                     }
 
                     .bet-banner {
-                        flex: 1;
-                        min-width: 140px;
-                        font-size: 12px;
-                        padding: 10px 8px;
-                        margin: 0;
+                        padding: 10px 6px;
+                        font-size: 11px;
+                        min-height: 40px;
                     }
 
                     .messages-area {
                         padding: 12px;
+                        gap: 10px;
                     }
 
                     .message-bubble {
                         max-width: 90%;
                         padding: 12px 14px;
-                        font-size: 14px;
+                        font-size: 13px;
                     }
 
                     .input-form {
                         padding: 12px;
+                        gap: 10px;
+                    }
+
+                    .input-main-row {
                         gap: 8px;
                     }
 
@@ -626,8 +833,17 @@ const App = () => {
                         padding: 12px 14px;
                         font-size: 14px;
                         min-height: 46px;
-                        background: #ffffff;
-                        color: #2d3748;
+                    }
+
+                    .action-buttons {
+                        gap: 6px;
+                    }
+
+                    .icon-button {
+                        min-width: 42px;
+                        min-height: 42px;
+                        padding: 10px;
+                        font-size: 14px;
                     }
 
                     .chat-button {
@@ -636,9 +852,190 @@ const App = () => {
                         min-height: 46px;
                         min-width: 70px;
                     }
+
+                    .uploaded-image {
+                        max-width: 200px;
+                    }
                 }
 
-                /* Correction pour iOS Safari */
+                /* Téléphones moyens */
+                @media (min-width: 361px) and (max-width: 480px) {
+                    .chat-header {
+                        padding: 12px 14px;
+                    }
+
+                    .header-title {
+                        font-size: 15px;
+                    }
+
+                    .bet-banner {
+                        font-size: 12px;
+                    }
+
+                    .message-bubble {
+                        max-width: 88%;
+                    }
+                }
+
+                /* Tablettes et grands téléphones */
+                @media (min-width: 481px) and (max-width: 768px) {
+                    .chat-header {
+                        padding: 15px 20px;
+                        min-height: 70px;
+                    }
+
+                    .header-title {
+                        font-size: 18px;
+                    }
+
+                    .header-subtitle {
+                        font-size: 13px;
+                        padding: 5px 10px;
+                    }
+
+                    .banner-container {
+                        padding: 15px;
+                        gap: 10px;
+                    }
+
+                    .bet-banner {
+                        padding: 14px 10px;
+                        font-size: 13px;
+                    }
+
+                    .messages-area {
+                        padding: 20px;
+                    }
+
+                    .message-bubble {
+                        max-width: 80%;
+                        padding: 16px 18px;
+                    }
+
+                    .input-form {
+                        padding: 20px;
+                    }
+
+                    .chat-input {
+                        min-height: 54px;
+                    }
+
+                    .chat-button {
+                        min-height: 54px;
+                    }
+                }
+
+                /* Desktop */
+                @media (min-width: 769px) {
+                    .app-container {
+                        padding: 20px;
+                    }
+
+                    .chat-card {
+                        width: 100%;
+                        max-width: 900px;
+                        height: 90vh;
+                        border-radius: 20px;
+                        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+                    }
+
+                    .chat-header {
+                        padding: 20px 25px;
+                        min-height: 80px;
+                        border-radius: 20px 20px 0 0;
+                    }
+
+                    .header-title {
+                        font-size: 20px;
+                    }
+
+                    .header-subtitle {
+                        font-size: 14px;
+                    }
+
+                    .banner-container {
+                        padding: 20px;
+                        gap: 12px;
+                    }
+
+                    .bet-banner {
+                        padding: 16px 12px;
+                        font-size: 14px;
+                        min-height: 50px;
+                    }
+
+                    .bet-banner:hover {
+                        transform: translateY(-2px);
+                    }
+
+                    .messages-area {
+                        padding: 25px;
+                    }
+
+                    .message-bubble {
+                        max-width: 70%;
+                        padding: 18px 20px;
+                        font-size: 15px;
+                    }
+
+                    .input-form {
+                        padding: 20px;
+                        border-radius: 0 0 20px 20px;
+                    }
+
+                    .chat-input {
+                        padding: 16px 20px;
+                        min-height: 56px;
+                    }
+
+                    .chat-button:hover:not(:disabled) {
+                        transform: translateY(-2px);
+                    }
+
+                    .icon-button:hover {
+                        background: rgba(55, 55, 60, 0.9);
+                        transform: translateY(-1px);
+                    }
+                }
+
+                /* Orientation paysage sur mobile */
+                @media (max-height: 500px) and (orientation: landscape) {
+                    .chat-header {
+                        min-height: 50px;
+                        padding: 8px 12px;
+                    }
+
+                    .banner-container {
+                        padding: 8px 12px;
+                    }
+
+                    .bet-banner {
+                        min-height: 36px;
+                        padding: 8px 6px;
+                        font-size: 11px;
+                    }
+
+                    .messages-area {
+                        padding: 12px;
+                    }
+
+                    .input-form {
+                        padding: 12px;
+                    }
+
+                    .chat-input {
+                        min-height: 44px;
+                        padding: 10px 14px;
+                    }
+
+                    .chat-button {
+                        min-height: 44px;
+                        min-width: 70px;
+                        padding: 10px 16px;
+                    }
+                }
+
+                /* Support iOS Safari */
                 @supports (-webkit-touch-callout: none) {
                     .app-container {
                         min-height: -webkit-fill-available;
@@ -647,40 +1044,46 @@ const App = () => {
                     .chat-card {
                         height: -webkit-fill-available;
                     }
+                    
+                    .messages-area {
+                        padding-bottom: env(safe-area-inset-bottom);
+                    }
                 }
 
-                /* Scrollbar personnalisée sombre */
+                /* Scrollbar sombre */
                 .messages-area::-webkit-scrollbar {
                     width: 4px;
                 }
 
                 .messages-area::-webkit-scrollbar-track {
                     background: rgba(255, 255, 255, 0.05);
+                    border-radius: 2px;
                 }
 
                 .messages-area::-webkit-scrollbar-thumb {
-                    background: #4a5568;
+                    background: linear-gradient(135deg, #8b5cf6, #a855f7);
                     border-radius: 2px;
                 }
 
                 .messages-area::-webkit-scrollbar-thumb:hover {
-                    background: #718096;
+                    background: linear-gradient(135deg, #a855f7, #8b5cf6);
                 }
             `}</style>
 
             <div className="chat-card">
                 
-                {/* En-tête du Chatbot */}
+                {/* En-tête sombre */}
                 <div className="chat-header">
                     <div className="header-content">
-                        <span className={`status-dot ${isBotTyping ? 'typing' : 'idle'}`}></span>
+                        <span className={`status-dot ${isListening ? 'listening' : isBotTyping ? 'typing' : 'idle'}`}></span>
                         <h1 className="header-title">
-                            {BOT_NAME} <span className="header-subtitle">Code: {PROMO_CODE}</span>
+                            {BOT_NAME}
                         </h1>
+                        <span className="header-subtitle">Code: {PROMO_CODE}</span>
                     </div>
                 </div>
 
-                {/* Bannières 1xBet et MelBet avec nouveaux dégradés */}
+                {/* Bannières */}
                 <div className="banner-container">
                     <a href={AFFILIATE_LINK} target="_blank" rel="noopener noreferrer" className="bet-banner bet-banner-1xbet">
                         🎰 1xBet
@@ -696,7 +1099,7 @@ const App = () => {
                         <MessageBubble key={message.id} message={message} />
                     ))}
                     
-                    {/* Indicateur de saisie du bot */}
+                    {/* Indicateur de saisie */}
                     {isBotTyping && (
                         <div className="typing-indicator-container">
                             <div className="typing-indicator-dots">
@@ -710,23 +1113,70 @@ const App = () => {
                     <div ref={messagesEndRef} />
                 </div>
 
-                {/* Zone de Saisie - MAINTENANT VISIBLE */}
+                {/* Zone de Saisie avec fonctionnalités avancées */}
                 <form onSubmit={handleSend} className="input-form">
-                    <input
-                        type="text"
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder="💬 Posez votre question..."
-                        disabled={isBotTyping} 
-                        className="chat-input"
-                    />
-                    <button
-                        type="submit"
-                        disabled={!input.trim() || isBotTyping} 
-                        className="chat-button"
-                    >
-                        {isBotTyping ? '...' : 'Envoyer'}
-                    </button>
+                    <div className="input-main-row">
+                        <div className="input-container">
+                            <input
+                                type="text"
+                                value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                                placeholder="💬 Tapez votre message..."
+                                disabled={isBotTyping} 
+                                className="chat-input"
+                            />
+                            
+                            {/* Aperçu de l'image sélectionnée */}
+                            {selectedImage && (
+                                <div className="image-preview">
+                                    <img src={selectedImage} alt="Preview" className="preview-image" />
+                                    <div className="preview-info">
+                                        <div className="preview-name">Image sélectionnée</div>
+                                        <button type="button" onClick={removeImage} className="remove-image">
+                                            Supprimer
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                        
+                        <button
+                            type="submit"
+                            disabled={(!input.trim() && !selectedImage) || isBotTyping} 
+                            className="chat-button"
+                        >
+                            {isBotTyping ? '...' : '🚀'}
+                        </button>
+                    </div>
+
+                    {/* Boutons d'action */}
+                    <div className="action-buttons">
+                        <button 
+                            type="button" 
+                            onClick={isListening ? stopListening : startListening}
+                            className={`icon-button ${isListening ? 'recording' : ''}`}
+                            disabled={isBotTyping}
+                        >
+                            {isListening ? '⏹️' : '🎤'}
+                        </button>
+                        
+                        <button 
+                            type="button" 
+                            onClick={() => fileInputRef.current?.click()}
+                            className="icon-button upload"
+                            disabled={isBotTyping}
+                        >
+                            📸
+                        </button>
+                        
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleImageUpload}
+                            accept="image/*"
+                            style={{ display: 'none' }}
+                        />
+                    </div>
                 </form>
 
             </div>
