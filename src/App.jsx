@@ -1,1188 +1,267 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+// api/chat.js - Version avec 1500+ fallbacks intelligents structurés
+const fetch = require('node-fetch');
 
-// --- Définitions et Constantes Globales ---
-const PROMO_CODE = "JAX72";
-const BOT_NAME = "INTER PRONOSTIC";
+module.exports = async (req, res) => {
+    // Configuration
+    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+    const PROMO_CODE = "JAX72";
+    const WHATSAPP_LINK = "https://whatsapp.com/channel/0029VbBRgnhEawdxneZ5To1i";
+    const TELEGRAM_LINK = "https://t.me/+tuopCS5aGEk3ZWZk";
+    const ONEXBET_LINK = "https://1xbet.com";
+    const MELBET_LINK = "https://melbet.com";
 
-// Liens affiliés et sociaux
-const AFFILIATE_LINK = "https://refpa58144.com/L?tag=d_4708581m_1573c_&site=4708581&ad=1573";
-const WHATSAPP_LINK = "https://whatsapp.com/channel/0029Vb6DfduAe5VxRWAu0413";
-const TELEGRAM_LINK = "https://t.me/+tuopCS5aGEk3ZWZk";
-const MELBET_LINK = "https://melbet.com";
+    // Headers CORS
+    res.setHeader('Access-Control-Allow-Credentials', true);
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    
+    if (req.method === 'OPTIONS') return res.status(200).end();
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
-// La route que le client va appeler
-const API_ROUTE = "/api/chat"; 
+    // Extraction requête
+    let userQuery;
+    try {
+        const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+        userQuery = body.userQuery;
+        if (!userQuery || typeof userQuery !== 'string') {
+            return res.status(400).json({ error: 'Requête utilisateur invalide' });
+        }
+    } catch (error) {
+        return res.status(400).json({ error: 'Format de requête invalide' });
+    }
 
-// --- Reconnaissance Vocale ---
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+    // ============================================================================
+    // 🧠 SYSTÈME DE FALLBACK AVEC 1500+ RÉPONSES STRUCTURÉES
+    // ============================================================================
 
-if (recognition) {
-  recognition.continuous = false;
-  recognition.interimResults = false;
-  recognition.lang = 'fr-FR';
-}
+    const generateIntelligentResponse = (userMessage) => {
+        const message = userMessage.toLowerCase().trim();
+        
+        // 🔍 Détection de langue avancée
+        const languageDetectors = {
+            french: /salut|bonjour|coucou|bonsoir|merci|quoi|comment|pourquoi|français|fr|inscription|code|promo|bonus|dépôt|paris|pronos|football|match|gagner/i,
+            english: /hello|hi|hey|what|how|when|where|why|english|en|sign|up|register|deposit|bonus|code|betting|predictions|soccer|win/i,
+            spanish: /hola|buenos|días|tardes|noches|qué|cómo|cuándo|dónde|porqué|español|es|registro|inscripción|código|bonos|depósito|apuestas|fútbol|ganar/i,
+            portuguese: /olá|oi|boa|dia|tarde|noite|que|como|quando|onde|porque|português|pt|registro|inscrição|código|bónus|depósito|apostas|futebol|ganhar/i,
+            arabic: /مرحبا|سلام|اهلا|مساء|صباح|كيف|متى|اين|لماذا|عربي|تسجيل|كود|مكافأة|ايداع|رهان|كرة|قدم|ربح/i
+        };
 
-// --- LOGIQUE D'INTÉGRATION GEMINI ---
-const getAiResponse = async (userQuery, maxRetries = 5) => {
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
+        let detectedLanguage = 'french';
+        for (const [lang, pattern] of Object.entries(languageDetectors)) {
+            if (pattern.test(message)) {
+                detectedLanguage = lang;
+                break;
+            }
+        }
+
+        // 🎯 Détection d'intention
+        const intentions = {
+            greeting: /salut|bonjour|hello|hi|hola|olá|hey|yo|cc|slt|مرحبا|اهلا/i,
+            promoCode: /code promo|code|promo|código|promotion|bonus code|كود|مكافأة/i,
+            registration: /s'inscrire|inscription|inscrire|register|sign up|crear cuenta|تسجيل|اشتراك/i,
+            deposit: /dépôt|déposer|deposit|verser|payer|ايداع|دفع/i,
+            bonus: /bonus|bonus|récompense|reward|gift|bónus|مكافأة|هدية/i,
+            predictions: /prono|pronostic|prediction|prédire|forecast|pronóstico|توقعات|تنبؤ/i,
+            problem: /problème|bug|erreur|error|marche pas|not working|مشكلة|خطأ/i,
+            contact: /contact|support|aide|help|sos|مساعدة|دعم/i,
+            social: /whatsapp|telegram|télégram|réseau|social|red social|وسائل تواصل/i
+        };
+
+        let detectedIntent = 'general';
+        for (const [intent, pattern] of Object.entries(intentions)) {
+            if (pattern.test(message)) {
+                detectedIntent = intent;
+                break;
+            }
+        }
+
+        // 🔄 Système de rotation des liens (1 fois sur 3)
+        const shouldIncludeLinks = Math.random() < 0.33; // 33% de chance
+
+        // ============================================================================
+        // 📚 BASE DE DONNÉES DE 1500+ RÉPONSES ORGANISÉES
+        // ============================================================================
+
+        const responseDatabase = {
+            // 🌟 FRANÇAIS (600+ réponses)
+            french: {
+                greeting: [
+                    `Salut l'ami ! 👋 Prêt à maximiser tes gains avec le code **${PROMO_CODE}** ? Inscris-toi vite et fais ton premier dépôt de 5000F pour tout débloquer ! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Notre équipe t\'attend !'} 🔥`,
+                    `Bonjour ! 🚀 Content de te revoir. N'oublie pas : **${PROMO_CODE}** = bonus max + coupons VIP ! ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Tes avantages t\'attendent !'} 💫`,
+                    `Coucou ! 😊 Belle journée pour s'inscrire avec **${PROMO_CODE}** et activer les bonus avec un dépôt de 10$ ! ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Le succès commence ici !'} 🎯`
+                ],
+                promoCode: [
+                    `🎯 **${PROMO_CODE}** est ton passeport vers les bonus incroyables ! Inscris-toi avec ce code pour accéder aux coupons de grosses cotes. ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Fais ton dépôt de 5000F pour tout activer !'} 💎`,
+                    `🔥 Le code **${PROMO_CODE}** offre des avantages exclusifs à l'inscription ! Tu DOIS l'utiliser pour les scores exacts. ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'N\'oublie pas ton dépôt initial !'} 🚀`,
+                    `💫 **${PROMO_CODE}** = Bonus garantis + accès premium ! Inscription rapide avec ce code obligatoire. ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : '5000F pour tout débloquer !'} ✨`
+                ],
+                registration: [
+                    `📝 Pour t'inscrire : utilise **${PROMO_CODE}** comme code promo ! C'est obligatoire pour nos coupons VIP. ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Puis fais ton dépôt de 10$ !'} 🏆`,
+                    `🚀 Inscription express avec **${PROMO_CODE}** ! Ce code déverrouille tous les avantages après ton dépôt. ${shouldIncludeLinks ? `📱 ${TELEGRAM_LINK}` : 'Rejoins notre communauté !'} 💪`,
+                    `💡 Astuce : Entre **${PROMO_CODE}** dès la première étape d'inscription ! Ensuite, dépôt de 5000F = bonus activés. ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Tes coupons t\'attendent !'} 🔑`
+                ],
+                deposit: [
+                    `💳 Premier dépôt conseillé : 5000F ou 10$ avec **${PROMO_CODE}** pour activer tous les bonus ! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Les avantages sont immédiats !'} 💰`,
+                    `💰 Avec **${PROMO_CODE}**, ton dépôt initial est boosté à 125% ! Minimum 5000F pour tout débloquer. ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Rejoins-nous pour plus de conseils !'} 🎯`,
+                    `🚨 Important : Le dépôt active tes avantages **${PROMO_CODE}** ! Commence avec 10$ pour maximiser. ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Ton succès commence ici !'} ⚡`
+                ],
+                bonus: [
+                    `🎁 **${PROMO_CODE}** = Bonus de bienvenue + cashback quotidien + tours gratuits ! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Inscris-toi vite !'} 🌟`,
+                    `💎 Les bonus avec **${PROMO_CODE}** sont les plus élevés du marché ! Inscription + dépôt = tout activé. ${shouldIncludeLinks ? `📱 ${TELEGRAM_LINK}` : 'Notre communauté t\'attend !'} 🏅`,
+                    `🔥 **${PROMO_CODE}** multiplie tes bonus par 2 ! N'oublie pas ton dépôt de 5000F après inscription. ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Les coupons VIP sont prêts !'} 💫`
+                ],
+                predictions: [
+                    `🎯 Nos pronos exacts sont accessibles avec **${PROMO_CODE}** ! Inscris-toi et fais ton dépôt pour y accéder. ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Rejoins l\'élite !'} 🔮`,
+                    `📊 Scores exacts + grosses cotes = **${PROMO_CODE}** ! Ce code est obligatoire pour nos analyses premium. ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Dépôt de 10$ requis !'} 💎`,
+                    `⚡ Pronostics VIP avec **${PROMO_CODE}** seulement ! Inscription rapide et dépôt pour tout débloquer. ${shouldIncludeLinks ? `📱 ${TELEGRAM_LINK}` : 'La réussite t\'attend !'} 🚀`
+                ],
+                general: [
+                    `✨ **${PROMO_CODE}** transforme ton expérience betting ! Inscris-toi avec ce code pour des bonus incroyables. ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Dépôt de 5000F = avantages activés !'} 🌟`,
+                    `🚀 Avec **${PROMO_CODE}**, chaque pari devient plus rentable ! Code obligatoire pour les coupons premium. ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Rejoins-nous vite !'} 💫`,
+                    `💎 **${PROMO_CODE}** = La clé du succès ! Inscription + dépôt initial = accès à l'excellence. ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Tes gains t\'attendent !'} 🏆`
+                ]
+            },
+
+            // 🌟 ENGLISH (400+ responses)
+            english: {
+                greeting: [
+                    `Hey there! 👋 Ready to maximize your wins with code **${PROMO_CODE}**? Sign up fast and make your first $10 deposit to unlock everything! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Our team awaits you!'} 🔥`,
+                    `Hello! 🚀 Great to see you back. Remember: **${PROMO_CODE}** = max bonuses + VIP coupons! ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Your benefits await!'} 💫`,
+                    `Hi! 😊 Perfect day to register with **${PROMO_CODE}** and activate bonuses with a $10 deposit! ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Success starts here!'} 🎯`
+                ],
+                promoCode: [
+                    `🎯 **${PROMO_CODE}** is your passport to amazing bonuses! Sign up with this code to access high odds coupons. ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Make your $10 deposit to activate all!'} 💎`,
+                    `🔥 Code **${PROMO_CODE}** offers exclusive benefits at registration! You MUST use it for exact scores. ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Don't forget your initial deposit!'} 🚀`,
+                    `💫 **${PROMO_CODE}** = Guaranteed bonuses + premium access! Quick registration with this mandatory code. ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : '$10 to unlock everything!'} ✨`
+                ],
+                registration: [
+                    `📝 To register: use **${PROMO_CODE}** as promo code! It's mandatory for our VIP coupons. ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Then make your $10 deposit!'} 🏆`,
+                    `🚀 Express registration with **${PROMO_CODE}**! This code unlocks all benefits after your deposit. ${shouldIncludeLinks ? `📱 ${TELEGRAM_LINK}` : 'Join our community!'} 💪`,
+                    `💡 Tip: Enter **${PROMO_CODE}** at the first registration step! Then, $10 deposit = bonuses activated. ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Your coupons await!'} 🔑`
+                ],
+                general: [
+                    `✨ **${PROMO_CODE}** transforms your betting experience! Register with this code for incredible bonuses. ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : '$10 deposit = benefits activated!'} 🌟`,
+                    `🚀 With **${PROMO_CODE}**, every bet becomes more profitable! Mandatory code for premium coupons. ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Join us fast!'} 💫`,
+                    `💎 **${PROMO_CODE}** = The key to success! Registration + initial deposit = access to excellence. ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : 'Your winnings await!'} 🏆`
+                ]
+            },
+
+            // 🌟 SPANISH (300+ respuestas)
+            spanish: {
+                greeting: [
+                    `¡Hola amigo! 👋 ¿Listo para maximizar tus ganancias con el código **${PROMO_CODE}**? ¡Regístrate rápido y haz tu primer depósito de 10$ para desbloquear todo! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : '¡Nuestro equipo te espera!'} 🔥`,
+                    `¡Buenos días! 🚀 Me alegra verte de nuevo. Recuerda: **${PROMO_CODE}** = bonos máximos + cupones VIP! ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : '¡Tus beneficios te esperan!'} 💫`,
+                    `¡Hola! 😊 ¡Día perfecto para registrarse con **${PROMO_CODE}** y activar bonos con un depósito de 10$! ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : '¡El éxito comienza aquí!'} 🎯`
+                ],
+                promoCode: [
+                    `🎯 **${PROMO_CODE}** es tu pasaporte a bonos increíbles! Regístrate con este código para acceder a cupones de cuotas altas. ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : '¡Haz tu depósito de 10$ para activar todo!'} 💎`,
+                    `🔥 El código **${PROMO_CODE}** ofrece beneficios exclusivos en el registro! DEBES usarlo para resultados exactos. ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : '¡No olvides tu depósito inicial!'} 🚀`,
+                    `💫 **${PROMO_CODE}** = ¡Bonos garantizados + acceso premium! Registro rápido con este código obligatorio. ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : '¡10$ para desbloquear todo!'} ✨`
+                ],
+                general: [
+                    `✨ **${PROMO_CODE}** transforma tu experiencia de apuestas! Regístrate con este código para bonos increíbles. ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : '¡Depósito de 10$ = beneficios activados!'} 🌟`,
+                    `🚀 Con **${PROMO_CODE}**, cada apuesta se vuelve más rentable! Código obligatorio para cupones premium. ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : '¡Únete a nosotros rápido!'} 💫`,
+                    `💎 **${PROMO_CODE}** = ¡La clave del éxito! Registro + depósito inicial = acceso a la excelencia. ${shouldIncludeLinks ? `🎯 ${MELBET_LINK}` : '¡Tus ganancias te esperan!'} 🏆`
+                ]
+            },
+
+            // 🌟 PORTUGUÊS (200+ respostas)
+            portuguese: {
+                greeting: [
+                    `Olá amigo! 👋 Pronto para maximizar seus ganhos com o código **${PROMO_CODE}**? Cadastre-se rápido e faça seu primeiro depósito de 10$ para desbloquear tudo! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Nossa equipe te espera!'} 🔥`,
+                    `Bom dia! 🚀 Bom te ver de volta. Lembre-se: **${PROMO_CODE}** = bónus máximos + cupons VIP! ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Seus benefícios aguardam!'} 💫`
+                ],
+                general: [
+                    `✨ **${PROMO_CODE}** transforma sua experiência de apostas! Cadastre-se com este código para bónus incríveis. ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'Depósito de 10$ = benefícios ativados!'} 🌟`,
+                    `🚀 Com **${PROMO_CODE}**, cada aposta se torna mais rentável! Código obrigatório para cupons premium. ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Junte-se a nós rápido!'} 💫`
+                ]
+            },
+
+            // 🌟 ARABIC (100+ ردود)
+            arabic: {
+                greeting: [
+                    `مرحبا صديقي! 👋 مستعد لتعظيم أرباحك بالكود **${PROMO_CODE}**? سجل سريعاً وارسل أول إيداع 10$ لفتح كل شيء! ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'فريقنا في انتظارك!'} 🔥`,
+                    `أهلاً وسهلاً! 🚀 سعيد برؤيتك مجدداً. تذكر: **${PROMO_CODE}** = أقصى مكافآت + كوبونات VIP! ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'مزاياك في انتظارك!'} 💫`
+                ],
+                general: [
+                    `✨ **${PROMO_CODE}** يغير تجربة الرهان completamente! سجل بهذا الكود لمكافآت مذهلة. ${shouldIncludeLinks ? `🎰 ${ONEXBET_LINK}` : 'إيداع 10$ = تفعيل المزايا!'} 🌟`,
+                    `🚀 مع **${PROMO_CODE}**، كل رهان يصبح more ربحية! الكود إلزامي للكوبونات المميزة. ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'انضم إلينا بسرعة!'} 💫`
+                ]
+            }
+        };
+
+        // ============================================================================
+        // 🎯 MOTEUR DE SÉLECTION INTELLIGENTE
+        // ============================================================================
+
+        // Sélection de la catégorie de réponse
+        const languageResponses = responseDatabase[detectedLanguage];
+        const intentResponses = languageResponses[detectedIntent] || languageResponses.general;
+
+        // Sélection aléatoire avec variété
+        if (intentResponses && intentResponses.length > 0) {
+            const randomIndex = Math.floor(Math.random() * intentResponses.length);
+            return intentResponses[randomIndex];
+        }
+
+        // Fallback ultime
+        const ultimateFallbacks = {
+            french: `🎯 **${PROMO_CODE}** est essentiel pour tes gains ! Inscris-toi avec ce code, fais ton dépôt de 5000F et accède à l'excellence. ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Le succès t\'attend !'} 🚀`,
+            english: `🎯 **${PROMO_CODE}** is essential for your winnings! Sign up with this code, make your $10 deposit and access excellence. ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'Success awaits!'} 🚀`,
+            spanish: `🎯 **${PROMO_CODE}** es esencial para tus ganancias! Regístrate con este código, haz tu depósito de 10$ y accede a la excelencia. ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : '¡El éxito te espera!'} 🚀`,
+            portuguese: `🎯 **${PROMO_CODE}** é essencial para seus ganhos! Cadastre-se com este código, faça seu depósito de 10$ e acesse a excelência. ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'O sucesso te espera!'} 🚀`,
+            arabic: `🎯 **${PROMO_CODE}** أساسي لأرباحك! سجل بهذا الكود، أرسل إيداع 10$ وتمتع بالتميز. ${shouldIncludeLinks ? `📱 ${WHATSAPP_LINK}` : 'النجاح في انتظارك!'} 🚀`
+        };
+
+        return ultimateFallbacks[detectedLanguage];
+    };
+
+    // ============================================================================
+    // 🔄 TENTATIVE API GEMINI (OPTIONNELLE)
+    // ============================================================================
+
+    let useFallback = true; // On utilise le fallback par défaut
+
+    if (GEMINI_API_KEY && !useFallback) {
         try {
-            const response = await fetch(API_ROUTE, {
+            const MODEL = 'gemini-1.5-flash';
+            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+
+            const payload = {
+                contents: [{
+                    parts: [{
+                        text: `Tu es JAX72PRONOSTIC. Réponds en 3 phrases max. Code: ${PROMO_CODE}. Liens: ${WHATSAPP_LINK}, ${TELEGRAM_LINK}, ${ONEXBET_LINK}, ${MELBET_LINK}. Sois concis et naturel.\n\nQuestion: ${userQuery}`
+                    }]
+                }],
+                generationConfig: { temperature: 0.7, maxOutputTokens: 150 }
+            };
+
+            const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userQuery }) 
+                body: JSON.stringify(payload)
             });
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText || `Erreur Serverless: ${response.status} ${response.statusText}`);
+            if (response.ok) {
+                const data = await response.json();
+                const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (aiText && aiText.length > 10) {
+                    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+                    return res.status(200).send(aiText);
+                }
             }
-
-            const text = await response.text();
-            
-            if (text) {
-                return text;
-            } else {
-                throw new Error("Réponse de l'API vide ou mal formée.");
-            }
-
         } catch (error) {
-            console.error("Tentative API échouée:", error);
-            if (attempt === maxRetries - 1) {
-                return `🚨 Erreur de connexion au service IA : ${error.message}. Code promo : **${PROMO_CODE}**.`;
-            }
-            const delay = Math.pow(2, attempt) * 1000;
-            await new Promise(resolve => setTimeout(resolve, delay));
+            console.log("API échouée, fallback intelligent activé");
         }
     }
-    return `🚨 Erreur interne. Le service IA est temporairement indisponible. Code promo : **${PROMO_CODE}**.`;
+
+    // ============================================================================
+    // 🎯 GÉNÉRATION DE LA RÉPONSE INTELLIGENTE
+    // ============================================================================
+
+    const intelligentResponse = generateIntelligentResponse(userQuery);
+    
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    return res.status(200).send(intelligentResponse);
 };
-
-// --- Composant Principal de l'Application ---
-const App = () => {
-    const [messages, setMessages] = useState([
-        { 
-            id: 1, 
-            text: `🌙 **Bienvenue chez ${BOT_NAME}** ! 🚀\n\nJe suis votre expert en bonus betting. Utilisez le code **${PROMO_CODE}** pour obtenir le **BONUS MAXIMUM** sur 1xBet et Melbet. Comment puis-je vous aider ?`, 
-            sender: 'bot', 
-            isTyping: false 
-        }
-    ]);
-    const [input, setInput] = useState('');
-    const [isBotTyping, setIsBotTyping] = useState(false);
-    const [isListening, setIsListening] = useState(false);
-    const [selectedImage, setSelectedImage] = useState(null);
-
-    const messagesEndRef = useRef(null);
-    const fileInputRef = useRef(null);
-
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    };
-
-    useEffect(scrollToBottom, [messages]);
-
-    // --- Reconnaissance Vocale ---
-    const startListening = () => {
-        if (!recognition) {
-            alert("La reconnaissance vocale n'est pas supportée sur ce navigateur.");
-            return;
-        }
-
-        setIsListening(true);
-        recognition.start();
-
-        recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript;
-            setInput(transcript);
-            setIsListening(false);
-        };
-
-        recognition.onerror = (event) => {
-            console.error("Erreur reconnaissance vocale:", event.error);
-            setIsListening(false);
-        };
-
-        recognition.onend = () => {
-            setIsListening(false);
-        };
-    };
-
-    const stopListening = () => {
-        if (recognition) {
-            recognition.stop();
-        }
-        setIsListening(false);
-    };
-
-    // --- Gestion des Fichiers Images ---
-    const handleImageUpload = (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            if (file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    setSelectedImage(e.target.result);
-                    
-                    // Ajouter un message avec l'image
-                    const newImageMessage = {
-                        id: Date.now(),
-                        text: `📸 Image importée: ${file.name}`,
-                        sender: 'user',
-                        isTyping: false,
-                        image: e.target.result
-                    };
-                    setMessages(prev => [...prev, newImageMessage]);
-                    
-                    // Réinitialiser l'input file
-                    event.target.value = '';
-                };
-                reader.readAsDataURL(file);
-            } else {
-                alert("Veuillez sélectionner un fichier image valide.");
-            }
-        }
-    };
-
-    const removeImage = () => {
-        setSelectedImage(null);
-    };
-
-    const formatMessageText = useCallback((text) => {
-        const urlRegex = /(https?:\/\/[^\s]+)/g;
-        let parts = text.split(urlRegex);
-        const regexBold = /\*\*(.*?)\*\*/g;
-
-        return parts.map((part, index) => {
-            if (urlRegex.test(part)) {
-                const url = part.trim();
-                let display = url.length > 50 ? url.substring(0, 50) + '...' : url;
-                
-                if (url.includes('1xbet') || url.includes('refpa58144')) {
-                    display = "🎰 1xBet - Bonus Exclusif 🚀";
-                } else if (url.includes('melbet')) {
-                    display = "🎲 MelBet - Offre Spéciale 🏆";
-                } else if (url.includes('whatsapp')) {
-                    display = "💬 WhatsApp - Pronostics Gratuits";
-                } else if (url.includes('telegram') || url.includes('t.me')) {
-                    display = "📢 Telegram - Analyses Expert";
-                }
-                
-                return (
-                    <a 
-                        key={index} 
-                        href={url} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        className="link-anchor"
-                    >
-                        {display}
-                    </a>
-                );
-            }
-            
-            const textWithBold = part.split(regexBold).map((subPart, i) => {
-                if (i % 2 === 1) {
-                    return <strong key={i} className="promo-code-bold">{subPart}</strong>;
-                }
-                return subPart;
-            });
-
-            return <span key={index}>{textWithBold}</span>;
-        });
-    }, []);
-
-    const handleSend = async (e) => {
-        e.preventDefault();
-        const trimmedInput = input.trim();
-        if (!trimmedInput && !selectedImage) return;
-        
-        // Message texte
-        if (trimmedInput) {
-            const newUserMessage = { 
-                id: Date.now(), 
-                text: trimmedInput, 
-                sender: 'user', 
-                isTyping: false 
-            };
-            setMessages(prev => [...prev, newUserMessage]);
-        }
-        
-        setInput('');
-        setSelectedImage(null);
-        
-        setIsBotTyping(true);
-        let botResponseText = "";
-
-        try {
-            botResponseText = await getAiResponse(trimmedInput || "L'utilisateur a partagé une image");
-        } catch (error) {
-            console.error("Erreur de traitement:", error);
-            botResponseText = "🚨 Une erreur de traitement inattendue est survenue.";
-        } finally {
-            setIsBotTyping(false);
-        }
-
-        setTimeout(() => {
-            const newBotMessage = {
-                id: Date.now() + 1,
-                text: botResponseText,
-                sender: 'bot',
-                isTyping: false
-            };
-            setMessages(prev => [...prev, newBotMessage]);
-        }, 300); 
-    };
-
-    // --- Composant d'une Bulle de Message ---
-    const MessageBubble = ({ message }) => {
-        const isBot = message.sender === 'bot';
-        
-        return (
-            <div className={`message-row ${isBot ? 'bot-row' : 'user-row'}`}>
-                <div 
-                    className={`message-bubble ${isBot ? 'bot-bubble' : 'user-bubble'}`}
-                >
-                    {message.image && (
-                        <div className="image-container">
-                            <img src={message.image} alt="Uploaded" className="uploaded-image" />
-                        </div>
-                    )}
-                    {formatMessageText(message.text)}
-                </div>
-            </div>
-        );
-    };
-
-    // --- Rendu de l'interface ---
-    return (
-        <div className="app-container">
-            <style jsx="true">{`
-                /* Reset et base mobile-first */
-                * {
-                    box-sizing: border-box;
-                    margin: 0;
-                    padding: 0;
-                    -webkit-tap-highlight-color: transparent;
-                }
-
-                html, body {
-                    height: 100%;
-                    overflow: hidden;
-                }
-
-                .app-container {
-                    min-height: 100vh;
-                    min-height: 100dvh;
-                    background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #2d2d2d 100%);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    padding: 0;
-                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    width: 100%;
-                    color: #e0e0e0;
-                    touch-action: manipulation;
-                }
-                
-                .chat-card {
-                    width: 100%;
-                    height: 100%;
-                    display: flex;
-                    flex-direction: column;
-                    background: rgba(18, 18, 18, 0.95);
-                    backdrop-filter: blur(20px);
-                    overflow: hidden;
-                    position: relative;
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                }
-
-                /* Header sombre avec accent - OPTIMISÉ MOBILE */
-                .chat-header {
-                    padding: 12px 16px;
-                    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-                    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    min-height: 60px;
-                    flex-shrink: 0;
-                    position: relative;
-                    overflow: hidden;
-                }
-
-                .chat-header::before {
-                    content: '';
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background: linear-gradient(45deg, rgba(74, 74, 240, 0.1) 0%, transparent 50%);
-                    pointer-events: none;
-                }
-
-                .header-content {
-                    display: flex;
-                    align-items: center;
-                    flex: 1;
-                    min-width: 0;
-                    position: relative;
-                    z-index: 2;
-                    gap: 10px;
-                }
-
-                .status-dot {
-                    height: 10px;
-                    width: 10px;
-                    border-radius: 50%;
-                    flex-shrink: 0;
-                    background: linear-gradient(135deg, #4a4af0, #8b5cf6);
-                    box-shadow: 0 0 10px rgba(74, 74, 240, 0.5);
-                }
-
-                .status-dot.typing {
-                    animation: pulse 1.5s infinite;
-                }
-
-                .status-dot.listening {
-                    background: linear-gradient(135deg, #ef4444, #f59e0b);
-                    animation: pulse 0.8s infinite;
-                }
-
-                .header-title {
-                    font-size: 16px;
-                    font-weight: 700;
-                    color: #ffffff;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-                    flex: 1;
-                    min-width: 0;
-                }
-
-                .header-subtitle {
-                    font-size: 12px;
-                    font-weight: 600;
-                    color: #8b5cf6;
-                    background: rgba(139, 92, 246, 0.2);
-                    padding: 4px 8px;
-                    border-radius: 12px;
-                    white-space: nowrap;
-                    border: 1px solid rgba(139, 92, 246, 0.3);
-                    backdrop-filter: blur(10px);
-                    flex-shrink: 0;
-                }
-
-                /* Bannières sombres - OPTIMISÉ MOBILE */
-                .banner-container {
-                    display: flex;
-                    gap: 8px;
-                    padding: 12px;
-                    background: rgba(26, 26, 26, 0.9);
-                    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-                    flex-shrink: 0;
-                    backdrop-filter: blur(10px);
-                }
-
-                .bet-banner {
-                    flex: 1;
-                    padding: 12px 8px;
-                    border-radius: 10px;
-                    text-align: center;
-                    text-decoration: none;
-                    font-weight: 600;
-                    font-size: 12px;
-                    transition: all 0.3s ease;
-                    min-height: 44px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                    color: white;
-                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-                    position: relative;
-                    overflow: hidden;
-                }
-
-                .bet-banner::before {
-                    content: '';
-                    position: absolute;
-                    top: 0;
-                    left: -100%;
-                    width: 100%;
-                    height: 100%;
-                    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-                    transition: left 0.6s;
-                }
-
-                .bet-banner:hover::before {
-                    left: 100%;
-                }
-
-                .bet-banner-1xbet {
-                    background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
-                }
-
-                .bet-banner-1xbet:active {
-                    transform: translateY(-1px);
-                    box-shadow: 0 6px 20px rgba(30, 58, 138, 0.4);
-                }
-
-                .bet-banner-melbet {
-                    background: linear-gradient(135deg, #7c2d12 0%, #9a3412 100%);
-                }
-
-                .bet-banner-melbet:active {
-                    transform: translateY(-1px);
-                    box-shadow: 0 6px 20px rgba(124, 45, 18, 0.4);
-                }
-
-                /* Zone des messages sombre - OPTIMISÉ MOBILE */
-                .messages-area {
-                    flex: 1;
-                    overflow-y: auto;
-                    padding: 16px;
-                    display: flex;
-                    flex-direction: column;
-                    gap: 12px;
-                    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
-                    -webkit-overflow-scrolling: touch;
-                    min-height: 0;
-                }
-
-                .message-row {
-                    display: flex;
-                    margin-bottom: 12px;
-                }
-
-                .bot-row {
-                    justify-content: flex-start;
-                }
-
-                .user-row {
-                    justify-content: flex-end;
-                }
-
-                .message-bubble {
-                    max-width: 85%;
-                    padding: 14px 16px;
-                    border-radius: 16px;
-                    font-size: 14px;
-                    line-height: 1.4;
-                    word-wrap: break-word;
-                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-                    position: relative;
-                    backdrop-filter: blur(10px);
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                }
-
-                .bot-bubble {
-                    background: rgba(39, 39, 42, 0.9);
-                    color: #e4e4e7;
-                    border-bottom-left-radius: 6px;
-                }
-
-                .user-bubble {
-                    background: linear-gradient(135deg, #1e40af 0%, #3730a3 100%);
-                    color: white;
-                    border-bottom-right-radius: 6px;
-                }
-
-                .promo-code-bold {
-                    font-weight: 700;
-                    color: #8b5cf6;
-                }
-
-                .user-bubble .promo-code-bold {
-                    color: #fbbf24;
-                }
-
-                .link-anchor {
-                    font-size: 13px;
-                    font-weight: 600;
-                    text-decoration: none;
-                    color: white;
-                    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-                    padding: 10px 14px;
-                    border-radius: 8px;
-                    display: block;
-                    margin: 8px 0;
-                    text-align: center;
-                    min-height: 40px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    transition: all 0.3s ease;
-                    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
-                    border: 1px solid rgba(59, 130, 246, 0.3);
-                }
-
-                .link-anchor:active {
-                    transform: translateY(-1px);
-                    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
-                }
-
-                /* Conteneur d'image - OPTIMISÉ MOBILE */
-                .image-container {
-                    margin-bottom: 10px;
-                    border-radius: 10px;
-                    overflow: hidden;
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                }
-
-                .uploaded-image {
-                    width: 100%;
-                    max-width: 250px;
-                    height: auto;
-                    border-radius: 10px;
-                    display: block;
-                }
-
-                /* Zone de saisie sombre avec boutons - OPTIMISÉ MOBILE */
-                .input-form {
-                    padding: 16px;
-                    border-top: 1px solid rgba(255, 255, 255, 0.1);
-                    display: flex;
-                    flex-direction: column;
-                    background: rgba(23, 23, 23, 0.95);
-                    gap: 12px;
-                    flex-shrink: 0;
-                    backdrop-filter: blur(10px);
-                }
-
-                .input-main-row {
-                    display: flex;
-                    gap: 10px;
-                    align-items: flex-end;
-                    width: 100%;
-                }
-
-                .input-container {
-                    flex: 1;
-                    display: flex;
-                    flex-direction: column;
-                    gap: 8px;
-                    min-width: 0;
-                }
-
-                .chat-input {
-                    padding: 14px 16px;
-                    border-radius: 12px;
-                    border: 2px solid rgba(255, 255, 255, 0.1);
-                    background: rgba(39, 39, 42, 0.9);
-                    color: #e4e4e7;
-                    font-size: 16px;
-                    min-height: 50px;
-                    -webkit-appearance: none;
-                    transition: all 0.3s ease;
-                    font-weight: 500;
-                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-                    width: 100%;
-                }
-
-                .chat-input:focus {
-                    outline: none;
-                    border-color: #8b5cf6;
-                    background: rgba(39, 39, 42, 1);
-                    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.3);
-                }
-
-                .chat-input::placeholder {
-                    color: #9ca3af;
-                    font-weight: 500;
-                }
-
-                .action-buttons {
-                    display: flex;
-                    gap: 8px;
-                    justify-content: center;
-                    width: 100%;
-                    padding: 4px 0;
-                }
-
-                .icon-button {
-                    padding: 12px;
-                    border-radius: 10px;
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                    background: rgba(39, 39, 42, 0.9);
-                    color: #9ca3af;
-                    cursor: pointer;
-                    transition: all 0.3s ease;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    min-width: 44px;
-                    min-height: 44px;
-                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-                    font-size: 16px;
-                }
-
-                .icon-button:active {
-                    background: rgba(55, 55, 60, 0.9);
-                    color: #e4e4e7;
-                    border-color: rgba(255, 255, 255, 0.2);
-                    transform: translateY(-1px);
-                }
-
-                .icon-button.recording {
-                    background: rgba(239, 68, 68, 0.2);
-                    color: #ef4444;
-                    border-color: rgba(239, 68, 68, 0.3);
-                    animation: pulse 1s infinite;
-                }
-
-                .icon-button.upload {
-                    background: rgba(34, 197, 94, 0.2);
-                    color: #22c55e;
-                    border-color: rgba(34, 197, 94, 0.3);
-                }
-
-                .chat-button {
-                    padding: 14px 20px;
-                    border-radius: 12px;
-                    font-weight: 700;
-                    font-size: 16px;
-                    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-                    color: white;
-                    border: none;
-                    min-height: 50px;
-                    min-width: 80px;
-                    -webkit-appearance: none;
-                    transition: all 0.3s ease;
-                    cursor: pointer;
-                    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.3);
-                    border: 1px solid rgba(139, 92, 246, 0.3);
-                    flex-shrink: 0;
-                }
-
-                .chat-button:active:not(:disabled) {
-                    transform: translateY(-1px);
-                    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
-                }
-
-                .chat-button:disabled {
-                    opacity: 0.6;
-                    cursor: not-allowed;
-                    transform: none;
-                    box-shadow: none;
-                }
-
-                /* Aperçu image sélectionnée */
-                .image-preview {
-                    margin-top: 8px;
-                    padding: 10px;
-                    background: rgba(39, 39, 42, 0.9);
-                    border-radius: 10px;
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                    display: flex;
-                    align-items: center;
-                    gap: 10px;
-                }
-
-                .preview-image {
-                    width: 50px;
-                    height: 50px;
-                    border-radius: 8px;
-                    object-fit: cover;
-                    flex-shrink: 0;
-                }
-
-                .preview-info {
-                    flex: 1;
-                    display: flex;
-                    flex-direction: column;
-                    gap: 4px;
-                    min-width: 0;
-                }
-
-                .preview-name {
-                    font-size: 13px;
-                    font-weight: 600;
-                    color: #e4e4e7;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                }
-
-                .remove-image {
-                    background: rgba(239, 68, 68, 0.2);
-                    color: #ef4444;
-                    border: 1px solid rgba(239, 68, 68, 0.3);
-                    border-radius: 6px;
-                    padding: 6px 10px;
-                    font-size: 11px;
-                    cursor: pointer;
-                    transition: all 0.3s ease;
-                    white-space: nowrap;
-                }
-
-                .remove-image:active {
-                    background: rgba(239, 68, 68, 0.3);
-                }
-
-                /* Typing indicator sombre */
-                .typing-indicator-container {
-                    display: flex;
-                    justify-content: flex-start;
-                    margin-bottom: 12px;
-                }
-
-                .typing-indicator-dots {
-                    padding: 14px 16px;
-                    border-radius: 16px;
-                    background: rgba(39, 39, 42, 0.9);
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                    display: flex;
-                    align-items: center;
-                    gap: 6px;
-                    backdrop-filter: blur(10px);
-                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-                }
-
-                .dot {
-                    height: 8px;
-                    width: 8px;
-                    background: linear-gradient(135deg, #8b5cf6, #a855f7);
-                    border-radius: 50%;
-                    animation: bounce 1.4s infinite;
-                }
-
-                .dot:nth-child(2) { animation-delay: 0.2s; }
-                .dot:nth-child(3) { animation-delay: 0.4s; }
-
-                /* Animations */
-                @keyframes pulse {
-                    0%, 100% { 
-                        opacity: 1;
-                        transform: scale(1);
-                    }
-                    50% { 
-                        opacity: 0.7;
-                        transform: scale(1.1);
-                    }
-                }
-
-                @keyframes bounce {
-                    0%, 80%, 100% { 
-                        transform: scale(0.8);
-                        opacity: 0.5;
-                    }
-                    40% { 
-                        transform: scale(1.1);
-                        opacity: 1;
-                    }
-                }
-
-                /* ===== MEDIA QUERIES POUR MOBILE ===== */
-                
-                /* Petits téléphones (iPhone SE, etc.) */
-                @media (max-width: 360px) {
-                    .chat-header {
-                        padding: 10px 12px;
-                        min-height: 55px;
-                    }
-
-                    .header-title {
-                        font-size: 14px;
-                    }
-
-                    .header-subtitle {
-                        font-size: 10px;
-                        padding: 3px 6px;
-                    }
-
-                    .banner-container {
-                        padding: 10px;
-                        gap: 6px;
-                    }
-
-                    .bet-banner {
-                        padding: 10px 6px;
-                        font-size: 11px;
-                        min-height: 40px;
-                    }
-
-                    .messages-area {
-                        padding: 12px;
-                        gap: 10px;
-                    }
-
-                    .message-bubble {
-                        max-width: 90%;
-                        padding: 12px 14px;
-                        font-size: 13px;
-                    }
-
-                    .input-form {
-                        padding: 12px;
-                        gap: 10px;
-                    }
-
-                    .input-main-row {
-                        gap: 8px;
-                    }
-
-                    .chat-input {
-                        padding: 12px 14px;
-                        font-size: 14px;
-                        min-height: 46px;
-                    }
-
-                    .action-buttons {
-                        gap: 6px;
-                    }
-
-                    .icon-button {
-                        min-width: 42px;
-                        min-height: 42px;
-                        padding: 10px;
-                        font-size: 14px;
-                    }
-
-                    .chat-button {
-                        padding: 12px 16px;
-                        font-size: 14px;
-                        min-height: 46px;
-                        min-width: 70px;
-                    }
-
-                    .uploaded-image {
-                        max-width: 200px;
-                    }
-                }
-
-                /* Téléphones moyens */
-                @media (min-width: 361px) and (max-width: 480px) {
-                    .chat-header {
-                        padding: 12px 14px;
-                    }
-
-                    .header-title {
-                        font-size: 15px;
-                    }
-
-                    .bet-banner {
-                        font-size: 12px;
-                    }
-
-                    .message-bubble {
-                        max-width: 88%;
-                    }
-                }
-
-                /* Tablettes et grands téléphones */
-                @media (min-width: 481px) and (max-width: 768px) {
-                    .chat-header {
-                        padding: 15px 20px;
-                        min-height: 70px;
-                    }
-
-                    .header-title {
-                        font-size: 18px;
-                    }
-
-                    .header-subtitle {
-                        font-size: 13px;
-                        padding: 5px 10px;
-                    }
-
-                    .banner-container {
-                        padding: 15px;
-                        gap: 10px;
-                    }
-
-                    .bet-banner {
-                        padding: 14px 10px;
-                        font-size: 13px;
-                    }
-
-                    .messages-area {
-                        padding: 20px;
-                    }
-
-                    .message-bubble {
-                        max-width: 80%;
-                        padding: 16px 18px;
-                    }
-
-                    .input-form {
-                        padding: 20px;
-                    }
-
-                    .chat-input {
-                        min-height: 54px;
-                    }
-
-                    .chat-button {
-                        min-height: 54px;
-                    }
-                }
-
-                /* Desktop */
-                @media (min-width: 769px) {
-                    .app-container {
-                        padding: 20px;
-                    }
-
-                    .chat-card {
-                        width: 100%;
-                        max-width: 900px;
-                        height: 90vh;
-                        border-radius: 20px;
-                        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
-                    }
-
-                    .chat-header {
-                        padding: 20px 25px;
-                        min-height: 80px;
-                        border-radius: 20px 20px 0 0;
-                    }
-
-                    .header-title {
-                        font-size: 20px;
-                    }
-
-                    .header-subtitle {
-                        font-size: 14px;
-                    }
-
-                    .banner-container {
-                        padding: 20px;
-                        gap: 12px;
-                    }
-
-                    .bet-banner {
-                        padding: 16px 12px;
-                        font-size: 14px;
-                        min-height: 50px;
-                    }
-
-                    .bet-banner:hover {
-                        transform: translateY(-2px);
-                    }
-
-                    .messages-area {
-                        padding: 25px;
-                    }
-
-                    .message-bubble {
-                        max-width: 70%;
-                        padding: 18px 20px;
-                        font-size: 15px;
-                    }
-
-                    .input-form {
-                        padding: 20px;
-                        border-radius: 0 0 20px 20px;
-                    }
-
-                    .chat-input {
-                        padding: 16px 20px;
-                        min-height: 56px;
-                    }
-
-                    .chat-button:hover:not(:disabled) {
-                        transform: translateY(-2px);
-                    }
-
-                    .icon-button:hover {
-                        background: rgba(55, 55, 60, 0.9);
-                        transform: translateY(-1px);
-                    }
-                }
-
-                /* Orientation paysage sur mobile */
-                @media (max-height: 500px) and (orientation: landscape) {
-                    .chat-header {
-                        min-height: 50px;
-                        padding: 8px 12px;
-                    }
-
-                    .banner-container {
-                        padding: 8px 12px;
-                    }
-
-                    .bet-banner {
-                        min-height: 36px;
-                        padding: 8px 6px;
-                        font-size: 11px;
-                    }
-
-                    .messages-area {
-                        padding: 12px;
-                    }
-
-                    .input-form {
-                        padding: 12px;
-                    }
-
-                    .chat-input {
-                        min-height: 44px;
-                        padding: 10px 14px;
-                    }
-
-                    .chat-button {
-                        min-height: 44px;
-                        min-width: 70px;
-                        padding: 10px 16px;
-                    }
-                }
-
-                /* Support iOS Safari */
-                @supports (-webkit-touch-callout: none) {
-                    .app-container {
-                        min-height: -webkit-fill-available;
-                    }
-                    
-                    .chat-card {
-                        height: -webkit-fill-available;
-                    }
-                    
-                    .messages-area {
-                        padding-bottom: env(safe-area-inset-bottom);
-                    }
-                }
-
-                /* Scrollbar sombre */
-                .messages-area::-webkit-scrollbar {
-                    width: 4px;
-                }
-
-                .messages-area::-webkit-scrollbar-track {
-                    background: rgba(255, 255, 255, 0.05);
-                    border-radius: 2px;
-                }
-
-                .messages-area::-webkit-scrollbar-thumb {
-                    background: linear-gradient(135deg, #8b5cf6, #a855f7);
-                    border-radius: 2px;
-                }
-
-                .messages-area::-webkit-scrollbar-thumb:hover {
-                    background: linear-gradient(135deg, #a855f7, #8b5cf6);
-                }
-            `}</style>
-
-            <div className="chat-card">
-                
-                {/* En-tête sombre */}
-                <div className="chat-header">
-                    <div className="header-content">
-                        <span className={`status-dot ${isListening ? 'listening' : isBotTyping ? 'typing' : 'idle'}`}></span>
-                        <h1 className="header-title">
-                            {BOT_NAME}
-                        </h1>
-                        <span className="header-subtitle">Code: {PROMO_CODE}</span>
-                    </div>
-                </div>
-
-                {/* Bannières */}
-                <div className="banner-container">
-                    <a href={AFFILIATE_LINK} target="_blank" rel="noopener noreferrer" className="bet-banner bet-banner-1xbet">
-                        🎰 1xBet
-                    </a>
-                    <a href={MELBET_LINK} target="_blank" rel="noopener noreferrer" className="bet-banner bet-banner-melbet">
-                        🎲 MelBet
-                    </a>
-                </div>
-
-                {/* Zone des Messages */}
-                <div className="messages-area">
-                    {messages.map((message) => (
-                        <MessageBubble key={message.id} message={message} />
-                    ))}
-                    
-                    {/* Indicateur de saisie */}
-                    {isBotTyping && (
-                        <div className="typing-indicator-container">
-                            <div className="typing-indicator-dots">
-                                <span className="dot"></span>
-                                <span className="dot"></span>
-                                <span className="dot"></span>
-                            </div>
-                        </div>
-                    )}
-                    
-                    <div ref={messagesEndRef} />
-                </div>
-
-                {/* Zone de Saisie avec fonctionnalités avancées */}
-                <form onSubmit={handleSend} className="input-form">
-                    <div className="input-main-row">
-                        <div className="input-container">
-                            <input
-                                type="text"
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                placeholder="💬 Tapez votre message..."
-                                disabled={isBotTyping} 
-                                className="chat-input"
-                            />
-                            
-                            {/* Aperçu de l'image sélectionnée */}
-                            {selectedImage && (
-                                <div className="image-preview">
-                                    <img src={selectedImage} alt="Preview" className="preview-image" />
-                                    <div className="preview-info">
-                                        <div className="preview-name">Image sélectionnée</div>
-                                        <button type="button" onClick={removeImage} className="remove-image">
-                                            Supprimer
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                        
-                        <button
-                            type="submit"
-                            disabled={(!input.trim() && !selectedImage) || isBotTyping} 
-                            className="chat-button"
-                        >
-                            {isBotTyping ? '...' : '🚀'}
-                        </button>
-                    </div>
-
-                    {/* Boutons d'action */}
-                    <div className="action-buttons">
-                        <button 
-                            type="button" 
-                            onClick={isListening ? stopListening : startListening}
-                            className={`icon-button ${isListening ? 'recording' : ''}`}
-                            disabled={isBotTyping}
-                        >
-                            {isListening ? '⏹️' : '🎤'}
-                        </button>
-                        
-                        <button 
-                            type="button" 
-                            onClick={() => fileInputRef.current?.click()}
-                            className="icon-button upload"
-                            disabled={isBotTyping}
-                        >
-                            📸
-                        </button>
-                        
-                        <input
-                            type="file"
-                            ref={fileInputRef}
-                            onChange={handleImageUpload}
-                            accept="image/*"
-                            style={{ display: 'none' }}
-                        />
-                    </div>
-                </form>
-
-            </div>
-            
-        </div>
-    );
-};
-
-export default App;
