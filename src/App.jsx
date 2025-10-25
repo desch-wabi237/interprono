@@ -2,11 +2,11 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 // --- Définitions et Constantes Globales ---
 const PROMO_CODE = "JAX72";
-const BOT_NAME = "JAX72PRONOSTIC";
+const BOT_NAME = "INTER PRONOSTIC";
 
 // Liens affiliés et sociaux
 const AFFILIATE_LINK = "https://refpa58144.com/L?tag=d_4708581m_1573c_&site=4708581&ad=1573";
-const WHATSAPP_LINK = "https://whatsapp.com/channel/0029VbBRgnhEawdxneZ5To1i";
+const WHATSAPP_LINK = "https://whatsapp.com/channel/0029Vb6DfduAe5VxRWAu0413";
 const TELEGRAM_LINK = "https://t.me/+tuopCS5aGEk3ZWZk";
 const MELBET_LINK = "https://melbet.com";
 
